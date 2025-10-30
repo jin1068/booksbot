@@ -1,0 +1,68 @@
+<form id="form-duobao" method="post" data-oc-toggle="ajax" data-oc-load="{{ action }}" data-oc-target="#duobao">
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover">
+      <thead>
+        <tr>
+          <th class="text-center" style="width: 1px;"><input type="checkbox" onclick="$('input[name*=\'selected\']').prop('checked', $(this).prop('checked'));" class="form-check-input"/></th>
+          <th><a href="{{ sort_title }}"{% if sort == 'dd.title' %} class="{{ order|lower }}"{% endif %}>{{ column_title }}</a></th>
+          <th><a href="{{ sort_product }}"{% if sort == 'product_name' %} class="{{ order|lower }}"{% endif %}>{{ column_product }}</a></th>
+          <th class="text-end"><a href="{{ sort_issue }}"{% if sort == 'issue.issue_no' %} class="{{ order|lower }}"{% endif %}>{{ column_issue_no }}</a></th>
+          <th class="text-end"><a href="{{ sort_total }}"{% if sort == 'issue.total_slots' %} class="{{ order|lower }}"{% endif %}>{{ column_total_slots }}</a></th>
+          <th class="text-end"><a href="{{ sort_joined }}"{% if sort == 'issue.joined_slots' %} class="{{ order|lower }}"{% endif %}>{{ column_joined_slots }}</a></th>
+          <th class="text-end">{{ column_price }}</th>
+          <th><a href="{{ sort_status }}"{% if sort == 'issue.status' %} class="{{ order|lower }}"{% endif %}>{{ column_status }}</a></th>
+          <th><a href="{{ sort_start }}"{% if sort == 'issue.start_time' %} class="{{ order|lower }}"{% endif %}>{{ column_start_time }}</a></th>
+          <th><a href="{{ sort_end }}"{% if sort == 'issue.end_time' %} class="{{ order|lower }}"{% endif %}>{{ column_end_time }}</a></th>
+          <th class="text-end col-1">{{ column_action }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if duobaos %}
+          {% for duobao in duobaos %}
+            <tr>
+              <td class="text-center"><input type="checkbox" name="selected[]" value="{{ duobao.duobao_id }}" class="form-check-input"/></td>
+              <td>{{ duobao.title }}</td>
+              <td>{{ duobao.product_name }}</td>
+              <td class="text-end">
+                {{ duobao.issue_no }}
+                {% if duobao.robot_enabled %}
+                  <i class="fa-solid fa-robot text-warning" data-bs-toggle="tooltip" title="已启用机器人"></i>
+                {% endif %}
+              </td>
+              <td class="text-end">{{ duobao.total_slots }}</td>
+              <td class="text-end">
+                <span data-bs-toggle="tooltip" title="真人: {{ duobao.ticket_stats.real }} | 机器人: {{ duobao.ticket_stats.robot }}">
+                  {{ duobao.joined_slots }}
+                  {% if duobao.ticket_stats.total > 0 %}
+                    <br><small class="text-muted">
+                      <span class="text-success">{{ duobao.ticket_stats.real }}</span> / 
+                      <span class="text-warning">{{ duobao.ticket_stats.robot }}</span>
+                    </small>
+                  {% endif %}
+                </span>
+              </td>
+              <td class="text-end">{{ duobao.price }}</td>
+              <td><span class="badge bg-secondary">{{ duobao.status }}</span></td>
+              <td>{{ duobao.start_time }}</td>
+              <td>{{ duobao.end_time }}</td>
+              <td class="text-end">
+                <a href="{{ duobao.edit }}" data-bs-toggle="tooltip" title="{{ button_edit }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-pencil"></i></a>
+                <a href="{{ duobao.draw }}" data-bs-toggle="tooltip" title="{{ button_draw }}" class="btn btn-warning btn-sm"><i class="fa-solid fa-ticket"></i></a>
+                <a href="{{ duobao.export }}" data-bs-toggle="tooltip" title="导出配置" class="btn btn-success btn-sm"><i class="fa-solid fa-file-export"></i></a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td class="text-center" colspan="11">{{ text_no_results }}</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="row">
+    <div class="col-sm-6 text-start">{{ pagination }}</div>
+    <div class="col-sm-6 text-end">{{ results }}</div>
+  </div>
+</form>
+

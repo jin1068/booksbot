@@ -1,0 +1,330 @@
+﻿{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="submit" form="form-banner" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+        <a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a></div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-pencil"></i> {{ text_form }}</div>
+      <div class="card-body">
+        <form id="form-banner" action="{{ save }}" method="post" data-oc-toggle="ajax">
+          <div class="row mb-3 required">
+            <label for="input-name" class="col-sm-2 col-form-label">{{ entry_name }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="name" value="{{ name }}" placeholder="{{ entry_name }}" id="input-name" class="form-control"/>
+              <div id="error-name" class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <label class="col-sm-2 col-form-label">{{ entry_status }}</label>
+            <div class="col-sm-10">
+              <div class="form-check form-switch form-switch-lg">
+                <input type="hidden" name="status" value="0"/>
+                <input type="checkbox" name="status" value="1" id="input-status" class="form-check-input"{% if status %} checked{% endif %}/>
+              </div>
+            </div>
+          </div>
+          <br/>
+          <ul class="nav nav-tabs">
+            {% for language in languages %}
+              <li class="nav-item"><a href="#language-{{ language.language_id }}" data-bs-toggle="tab" class="nav-link{% if loop.first %} active{% endif %}"><img src="{{ language.image }}" title="{{ language.name }}"/> {{ language.name }}</a></li>
+            {% endfor %}
+          </ul>
+          <div class="tab-content">
+            {% set image_row = 0 %}
+            {% for language in languages %}
+              <div id="language-{{ language.language_id }}" class="tab-pane{% if loop.first %} active{% endif %}">
+                <table id="image-{{ language.language_id }}" class="table table-bordered table-hover">
+                  <thead>
+                    <tr>
+                      <th class="required">{{ entry_title }}</th>
+                      <th>{{ entry_link }}</th>
+                      <th class="text-center">PC图片</th>
+                      <th class="text-center">手机图片</th>
+                      <th class="text-end">{{ entry_sort_order }}</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if banner_images[language.language_id] %}
+                      {% for banner_image in banner_images[language.language_id] %}
+                        <tr id="image-row-{{ image_row }}">
+                          <td>
+                            <input type="text" name="banner_image[{{ language.language_id }}][{{ image_row }}][title]" value="{{ banner_image.title }}" placeholder="{{ entry_title }}" id="input-image-{{ language.language_id }}-{{ image_row }}-title" class="form-control"/>
+                            <div id="error-image-{{ language.language_id }}-{{ image_row }}-title" class="invalid-feedback"></div>
+                          </td>
+                          <td style="width: 30%;"><input type="text" name="banner_image[{{ language.language_id }}][{{ image_row }}][link]" value="{{ banner_image.link }}" placeholder="{{ entry_link }}" id="input-image-{{ language.language_id }}-{{ image_row }}-link" class="form-control"/></td>
+                          <td class="text-center">
+                            <div class="border rounded d-block" style="max-width: 300px;">
+                              <img src="{{ banner_image.thumb }}" alt="" title="" id="thumb-image-{{ language.language_id }}-{{ image_row }}" data-oc-placeholder="{{ placeholder }}" class="img-fluid"/>
+                              <input type="hidden" name="banner_image[{{ language.language_id }}][{{ image_row }}][image]" value="{{ banner_image.image }}" id="input-image-{{ language.language_id }}-{{ image_row }}-image"/>
+                              <div class="d-grid">
+                                <button type="button" data-oc-toggle="image" data-oc-target="#input-image-{{ language.language_id }}-{{ image_row }}-image" data-oc-thumb="#thumb-image-{{ language.language_id }}-{{ image_row }}" class="btn btn-primary rounded-0"><i class="fa-solid fa-upload"></i> 上传图片</button>
+                                <button type="button" onclick="openImageEditor('#thumb-image-{{ language.language_id }}-{{ image_row }}', '#input-image-{{ language.language_id }}-{{ image_row }}-image', 1920, 1080)" class="btn btn-info rounded-0"><i class="fa-solid fa-crop"></i> 编辑图片</button>
+                                <button type="button" data-oc-toggle="clear" data-oc-target="#input-image-{{ language.language_id }}-{{ image_row }}-image" data-oc-thumb="#thumb-image-{{ language.language_id }}-{{ image_row }}" class="btn btn-warning rounded-0"><i class="fa-regular fa-trash-can"></i> 清除</button>
+                              </div>
+                            </div></td>
+                          <td class="text-center">
+                            <div class="border rounded d-block" style="max-width: 300px;">
+                              <img src="{{ banner_image.thumb_mobile|default(placeholder) }}" alt="" title="" id="thumb-image-mobile-{{ language.language_id }}-{{ image_row }}" data-oc-placeholder="{{ placeholder }}" class="img-fluid"/>
+                              <input type="hidden" name="banner_image[{{ language.language_id }}][{{ image_row }}][image_mobile]" value="{{ banner_image.image_mobile|default('') }}" id="input-image-mobile-{{ language.language_id }}-{{ image_row }}"/>
+                              <div class="d-grid">
+                                <button type="button" data-oc-toggle="image" data-oc-target="#input-image-mobile-{{ language.language_id }}-{{ image_row }}" data-oc-thumb="#thumb-image-mobile-{{ language.language_id }}-{{ image_row }}" class="btn btn-primary rounded-0"><i class="fa-solid fa-upload"></i> 上传图片</button>
+                                <button type="button" onclick="openImageEditor('#thumb-image-mobile-{{ language.language_id }}-{{ image_row }}', '#input-image-mobile-{{ language.language_id }}-{{ image_row }}', 430, 850)" class="btn btn-info rounded-0"><i class="fa-solid fa-crop"></i> 编辑图片</button>
+                                <button type="button" data-oc-toggle="clear" data-oc-target="#input-image-mobile-{{ language.language_id }}-{{ image_row }}" data-oc-thumb="#thumb-image-mobile-{{ language.language_id }}-{{ image_row }}" class="btn btn-warning rounded-0"><i class="fa-regular fa-trash-can"></i> 清除</button>
+                              </div>
+                            </div></td>
+                          <td class="text-end" style="width: 10%;"><input type="text" name="banner_image[{{ language.language_id }}][{{ image_row }}][sort_order]" value="{{ banner_image.sort_order }}" placeholder="{{ entry_sort_order }}" id="input-image-{{ language.language_id }}-{{ image_row }}-sort-order" class="form-control"/></td>
+                          <td class="text-end"><button type="button" onclick="$('#image-row-{{ image_row }}').remove();" data-bs-toggle="tooltip" title="{{ button_remove|escape('js') }}" class="btn btn-danger"><i class="fa-solid fa-minus-circle"></i></button></td>
+                        </tr>
+                        {% set image_row = image_row + 1 %}
+                      {% endfor %}
+                    {% endif %}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="5"></td>
+                      <td class="text-end"><button type="button" id="button-banner-{{ language.language_id }}" data-language="{{ language.language_id }}" data-bs-toggle="tooltip" title="{{ button_banner_add }}" class="btn btn-primary"><i class="fa-solid fa-plus-circle"></i></button></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="banner_id" value="{{ banner_id }}" id="input-banner-id"/>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+let cropperInstance = null;
+let currentThumbSelector = '';
+let currentInputSelector = '';
+let targetWidth = 1920;
+let targetHeight = 1080;
+const catalogImageBase = "{{ constant("HTTP_CATALOG")|escape('js') }}image/";
+
+function openImageEditor(thumbSelector, inputSelector, width, height) {
+    currentThumbSelector = thumbSelector;
+    currentInputSelector = inputSelector;
+    targetWidth = width;
+    targetHeight = height;
+
+    const imgElement = document.querySelector(thumbSelector);
+    const inputElement = document.querySelector(inputSelector);
+    const originalValue = (inputElement && inputElement.value) ? inputElement.value.trim() : '';
+
+    if (!imgElement || !originalValue) {
+        alert('�����ϴ�ͼƬ���ٽ��б༭');
+        return;
+    }
+
+    const cropperImageElement = document.getElementById('cropperImage');
+    const resolvedSrc = /^https?:\/\//i.test(originalValue)
+        ? originalValue
+        : catalogImageBase + originalValue.replace(/^image\//i, '');
+    const cacheBust = resolvedSrc.includes('?') ? '&' : '?';
+
+    cropperImageElement.src = resolvedSrc + cacheBust + 't=' + Date.now();
+
+    document.getElementById('targetSize').textContent = 'Ŀ��ߴ磺' + width + 'px �� ' + height + 'px';
+
+    const modalElement = document.getElementById('imageEditorModal');
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+
+    const initCropper = function () {
+        if (cropperInstance) {
+            cropperInstance.destroy();
+        }
+
+        cropperInstance = new Cropper(cropperImageElement, {
+            aspectRatio: width / height,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            minCropBoxWidth: 100,
+            minCropBoxHeight: 100
+        });
+
+        modalElement.removeEventListener('shown.bs.modal', initCropper);
+    };
+
+    modalElement.addEventListener('shown.bs.modal', initCropper);
+
+    const cleanup = function () {
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+
+        modalElement.removeEventListener('hidden.bs.modal', cleanup);
+    };
+
+    modalElement.addEventListener('hidden.bs.modal', cleanup);
+}
+
+function saveCroppedImage() {
+    if (!cropperInstance) {
+        alert('�༭��δ��ʼ���������´�ͼƬ�༭��');
+        return;
+    }
+
+    const canvas = cropperInstance.getCroppedCanvas({
+        width: targetWidth,
+        height: targetHeight,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+    });
+
+    const imageData = canvas.toDataURL('image/jpeg', 0.95);
+    const $actionButton = $('button[onclick="saveCroppedImage()"]');
+
+    $.ajax({
+        url: 'index.php?route=design/banner.uploadCropped&user_token={{ user_token }}',
+        type: 'POST',
+        data: {
+            image_data: imageData
+        },
+        dataType: 'json',
+        beforeSend: function () {
+            $actionButton.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> �����С�');
+        },
+        complete: function () {
+            $actionButton.prop('disabled', false).html('<i class="fa-solid fa-check"></i> ����༭');
+        },
+        success: function (json) {
+            if (json.error) {
+                alert('�ϴ�ʧ�ܣ�' + json.error);
+                return;
+            }
+
+            if (!json.image_path) {
+                alert('������δ����ͼƬ·�������Ժ����ԡ�');
+                return;
+            }
+
+            $(currentInputSelector).val(json.image_path);
+
+            const newThumbSrc = json.thumb ? json.thumb : json.image_url;
+
+            if (newThumbSrc) {
+                const resolvedThumb = /^https?:\/\//i.test(newThumbSrc)
+                    ? newThumbSrc
+                    : catalogImageBase + newThumbSrc.replace(/^image\//i, '');
+                const bust = resolvedThumb.includes('?') ? '&' : '?';
+
+                $(currentThumbSelector).attr('src', resolvedThumb + bust + Date.now());
+            }
+
+            $('#imageEditorModal').modal('hide');
+
+            $('#alert').prepend('<div class="alert alert-success alert-dismissible"><i class="fa-solid fa-check-circle"></i> ͼƬ�༭����ɹ���<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+        },
+        error: function (xhr, status, error) {
+            console.error('Upload error:', status, error, xhr.responseText);
+
+            let message = xhr.responseText || '���Ժ�����';
+
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                message = xhr.responseJSON.error;
+            }
+
+            alert('�ϴ�������' + message);
+        }
+    });
+}
+</script>
+
+<!-- 图片编辑器模态框 -->
+<div class="modal fade" id="imageEditorModal" tabindex="-1" aria-labelledby="imageEditorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imageEditorModalLabel"><i class="fa-solid fa-crop"></i> 图片编辑器</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-lg-9">
+            <div class="img-container" style="max-height: 600px; background: #f8f9fa;">
+              <img id="cropperImage" src="" style="max-width: 100%;">
+            </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="card">
+              <div class="card-header">
+                <strong>编辑工具</strong>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label">目标尺寸</label>
+                  <div class="text-muted small" id="targetSize">宽: 1920px × 高: 1080px</div>
+                </div>
+                <div class="d-grid gap-2">
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="cropperInstance.zoom(0.1)"><i class="fa-solid fa-magnifying-glass-plus"></i> 放大</button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="cropperInstance.zoom(-0.1)"><i class="fa-solid fa-magnifying-glass-minus"></i> 缩小</button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="cropperInstance.rotate(90)"><i class="fa-solid fa-rotate-right"></i> 旋转</button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="cropperInstance.reset()"><i class="fa-solid fa-arrows-rotate"></i> 重置</button>
+                  <hr>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="cropperInstance.move(-10, 0)"><i class="fa-solid fa-arrow-left"></i> 左移</button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="cropperInstance.move(10, 0)"><i class="fa-solid fa-arrow-right"></i> 右移</button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="cropperInstance.move(0, -10)"><i class="fa-solid fa-arrow-up"></i> 上移</button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="cropperInstance.move(0, 10)"><i class="fa-solid fa-arrow-down"></i> 下移</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" onclick="saveCroppedImage()"><i class="fa-solid fa-check"></i> 保存编辑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+
+<!-- Cropper.js JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+
+
+{{ footer }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

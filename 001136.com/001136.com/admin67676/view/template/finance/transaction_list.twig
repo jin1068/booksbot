@@ -1,0 +1,119 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card mb-3">
+      <div class="card-header"><i class="fa-solid fa-filter"></i> {{ text_list }}</div>
+      <div class="card-body">
+        <form id="form-filter" method="get" action="{{ action_filter }}">
+          <input type="hidden" name="user_token" value="{{ user_token }}" />
+          <div class="row g-3">
+            <div class="col-lg-3 col-md-4">
+              <label class="form-label">{{ entry_customer }}</label>
+              <input type="text" name="filter_customer" value="{{ filter_customer }}" class="form-control" placeholder="{{ entry_customer }}" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">{{ entry_customer_id }}</label>
+              <input type="text" name="filter_customer_id" value="{{ filter_customer_id }}" class="form-control" />
+            </div>
+            <div class="col-lg-3 col-md-4">
+              <label class="form-label">{{ entry_description }}</label>
+              <input type="text" name="filter_description" value="{{ filter_description }}" class="form-control" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">{{ entry_amount_min }}</label>
+              <input type="text" name="filter_amount_min" value="{{ filter_amount_min }}" class="form-control" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">{{ entry_amount_max }}</label>
+              <input type="text" name="filter_amount_max" value="{{ filter_amount_max }}" class="form-control" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">{{ entry_date_start }}</label>
+              <input type="date" name="filter_date_start" value="{{ filter_date_start }}" class="form-control" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">{{ entry_date_end }}</label>
+              <input type="date" name="filter_date_end" value="{{ filter_date_end }}" class="form-control" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <label class="form-label">{{ entry_type }}</label>
+              <select name="filter_type" class="form-select">
+                <option value="">{{ text_type_all }}</option>
+                <option value="credit" {% if filter_type == 'credit' %}selected{% endif %}>{{ text_type_credit }}</option>
+                <option value="debit" {% if filter_type == 'debit' %}selected{% endif %}>{{ text_type_debit }}</option>
+              </select>
+            </div>
+            <div class="col-12 text-end">
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> {{ button_filter }}</button>
+              <a href="{{ reset }}" class="btn btn-light"><i class="fa-solid fa-rotate-left"></i> {{ button_reset }}</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-list"></i> {{ text_list }}</div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead>
+              <tr>
+                <th style="width: 110px;">{{ column_transaction_id }}</th>
+                <th>{{ column_customer }}</th>
+                <th>{{ column_email }}</th>
+                <th>{{ column_description }}</th>
+                <th class="text-end">{{ column_amount }}</th>
+                <th>{{ column_type }}</th>
+                <th style="width: 160px;">{{ column_date_added }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if transactions %}
+                {% for transaction in transactions %}
+                  <tr>
+                    <td>#{{ transaction.transaction_id }}</td>
+                    <td>{{ transaction.customer }}</td>
+                    <td>{{ transaction.email }}</td>
+                    <td>{{ transaction.description }}</td>
+                    <td class="text-end">
+                      <span class="{% if transaction.amount_raw > 0 %}text-success{% elseif transaction.amount_raw < 0 %}text-danger{% endif %}">{{ transaction.amount }}</span>
+                    </td>
+                    <td>
+                      {% if transaction.amount_raw > 0 %}
+                        <span class="badge bg-success">{{ text_type_credit }}</span>
+                      {% elseif transaction.amount_raw < 0 %}
+                        <span class="badge bg-danger">{{ text_type_debit }}</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ text_type_all }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ transaction.date_added }}</td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td class="text-center" colspan="7">{{ text_no_results }}</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        <div class="row">
+          <div class="col-sm-6 text-start">{{ pagination }}</div>
+          <div class="col-sm-6 text-end">{{ results }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}

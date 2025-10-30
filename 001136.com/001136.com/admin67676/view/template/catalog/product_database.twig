@@ -1,0 +1,1366 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="button" data-bs-toggle="tooltip" title="快速导航：商品管理" class="btn btn-primary me-2" onclick="window.open('index.php?route=catalog/product&user_token={{ user_token }}', '_blank');">
+          <i class="fa-solid fa-box"></i> 商品管理
+        </button>
+        <button type="button" data-bs-toggle="tooltip" title="快速导航：商品分类" class="btn btn-success me-2" onclick="window.open('index.php?route=catalog/category&user_token={{ user_token }}', '_blank');">
+          <i class="fa-solid fa-folder-tree"></i> 商品分类
+        </button>
+        <button type="button" data-bs-toggle="tooltip" title="{{ button_download }}" class="btn btn-info" onclick="window.location='{{ download_template }}';">
+          <i class="fa-solid fa-download"></i> {{ button_download }}
+        </button>
+        <button type="button" data-bs-toggle="tooltip" title="{{ button_refresh }}" class="btn btn-secondary" onclick="refreshList();">
+          <i class="fa-solid fa-rotate"></i> {{ button_refresh }}
+        </button>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="tab-import" data-bs-toggle="tab" href="#import" role="tab">
+              <i class="fa-solid fa-upload"></i> {{ tab_import }}
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="tab-manage" data-bs-toggle="tab" href="#manage" role="tab">
+              <i class="fa-solid fa-list"></i> {{ tab_manage }}
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="card-body">
+        <div class="tab-content">
+          <!-- 导入标签页 -->
+          <div class="tab-pane fade show active" id="import" role="tabpanel">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header bg-primary text-white">
+                    <i class="fa-solid fa-circle-info"></i> {{ text_import_guide }}
+                  </div>
+                  <div class="card-body">
+                    <ol class="mb-0">
+                      <li>{{ text_guide_step1 }}</li>
+                      <li>{{ text_guide_step2 }}</li>
+                      <li>{{ text_guide_step3 }}</li>
+                      <li>{{ text_guide_step4 }}</li>
+                      <li>{{ text_guide_step5 }}</li>
+                      <li>{{ text_guide_step6 }}</li>
+                      <li>{{ text_guide_step7 }}</li>
+                    </ol>
+                    <div class="alert alert-info mt-3 mb-0">
+                      <i class="fa-solid fa-file-excel"></i> {{ text_file_format }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-header bg-success text-white">
+                    <i class="fa-solid fa-upload"></i> {{ text_upload }}
+                  </div>
+                  <div class="card-body">
+                    <form id="form-upload" enctype="multipart/form-data">
+                      <div class="mb-3">
+                        <label class="form-label" for="input-category">
+                          {{ entry_category }} <span class="text-danger">*</span>
+                        </label>
+                        <select name="category_id" id="input-category" class="form-select" required>
+                          <option value="">{{ text_select_category }}</option>
+                          {% for category in categories %}
+                            <option value="{{ category.category_id }}">{{ category.name|raw }}</option>
+                          {% endfor %}
+                        </select>
+                        <div class="form-text">{{ help_category }}</div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label" for="input-file">
+                          {{ entry_file }} <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" name="file" id="input-file" class="form-control" accept=".csv,.xls,.xlsx" required>
+                        <div class="form-text">{{ help_file }}</div>
+                      </div>
+                      <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                          <i class="fa-solid fa-upload"></i> {{ button_upload }}
+                        </button>
+                      </div>
+                    </form>
+                    <div id="upload-progress" class="mt-3" style="display: none;">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%">
+                          {{ text_loading }}
+                        </div>
+                      </div>
+                    </div>
+                    <div id="upload-result" class="mt-3"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 管理标签页 -->
+          <div class="tab-pane fade" id="manage" role="tabpanel">
+            <!-- 快捷导航提示 -->
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+              <strong><i class="fa-solid fa-lightbulb"></i> 快捷提示：</strong>
+              点击右上角的 <strong>商品管理</strong> 或 <strong>商品分类</strong> 按钮可快速跳转到对应页面进行详细编辑。
+              或者点击产品列表中的 <strong>编辑</strong> 按钮直接编辑该产品的所有信息。
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-12">
+                <div class="alert alert-info mb-3">
+                  <i class="fa-solid fa-info-circle"></i> 
+                  <strong>批量操作提示：</strong>先勾选要操作的产品（可使用表头的全选框），然后点击下方按钮进行批量操作
+                </div>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-primary" onclick="batchEdit();">
+                    <i class="fa-solid fa-pen-to-square"></i> 批量编辑
+                  </button>
+                  <button type="button" class="btn btn-success" onclick="enableSelected();">
+                    <i class="fa-solid fa-check"></i> 批量启用
+                  </button>
+                  <button type="button" class="btn btn-warning" onclick="disableSelected();">
+                    <i class="fa-solid fa-eye-slash"></i> 批量下架
+                  </button>
+                  <button type="button" class="btn btn-danger" onclick="deleteSelected();">
+                    <i class="fa-solid fa-trash"></i> 批量删除
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <div class="input-group">
+                  <input type="text" name="filter_name" id="input-filter-name" class="form-control" placeholder="{{ entry_name }}">
+                  <button type="button" class="btn btn-primary" onclick="filterProducts();">
+                    <i class="fa-solid fa-search"></i> {{ button_search }}
+                  </button>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <select name="filter_status" id="input-filter-status" class="form-select" onchange="filterProducts();">
+                  <option value="">-- {{ entry_status }} --</option>
+                  <option value="1">{{ text_enabled }}</option>
+                  <option value="0">{{ text_disabled }}</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <select name="filter_image" id="input-filter-image" class="form-select" onchange="filterProducts();">
+                  <option value="">-- 图片状态 --</option>
+                  <option value="1">有图片</option>
+                  <option value="0">无图片</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <select name="filter_category_id" id="input-filter-category" class="form-select" onchange="filterProducts();">
+                  <option value="">-- {{ entry_category }} --</option>
+                  {% for category in categories %}
+                    <option value="{{ category.category_id }}">{{ category.name|raw }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-2">
+                <select name="limit" id="input-limit" class="form-select" onchange="filterProducts();">
+                  <option value="20">每页 20 条</option>
+                  <option value="50">每页 50 条</option>
+                  <option value="100" selected>每页 100 条</option>
+                  <option value="200">每页 200 条</option>
+                </select>
+              </div>
+              <div class="col-md-1">
+                <button type="button" class="btn btn-secondary w-100" onclick="clearFilter();">
+                  <i class="fa-solid fa-times"></i> {{ button_clear }}
+                </button>
+              </div>
+            </div>
+
+            <div id="product-list">
+              <div class="text-center p-5">
+                <i class="fa-solid fa-spinner fa-spin fa-3x"></i>
+                <p class="mt-3">{{ text_loading }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+// 全局排序状态
+var currentSort = 'p.product_id';
+var currentOrder = 'ASC';
+
+// 排序函数
+function sortBy(column) {
+  if (currentSort === column) {
+    // 同一列，切换排序方向
+    currentOrder = (currentOrder === 'ASC') ? 'DESC' : 'ASC';
+  } else {
+    // 不同列，默认升序
+    currentSort = column;
+    currentOrder = 'ASC';
+  }
+  
+  // 重新加载第一页
+  loadProductsPage(1);
+}
+
+// 获取排序图标
+function getSortIcon(column) {
+  if (currentSort === column) {
+    if (currentOrder === 'ASC') {
+      return ' <i class="fa-solid fa-sort-up"></i>';
+    } else {
+      return ' <i class="fa-solid fa-sort-down"></i>';
+    }
+  }
+  return ' <i class="fa-solid fa-sort text-muted"></i>';
+}
+
+// 生成可排序的列标题
+function getSortableHeader(column, label) {
+  var clickable = ['p.product_id', 'name', 'p.model', 'categories', 'p.price', 'p.quantity', 'p.status'].includes(column);
+  if (clickable) {
+    return '<th class="text-center" style="cursor: pointer;" onclick="sortBy(\'' + column + '\');">' + 
+           label + getSortIcon(column) + '</th>';
+  } else {
+    return '<th class="text-center">' + label + '</th>';
+  }
+}
+
+// 生成底部批量操作HTML的辅助函数
+function getBatchActionsHtml() {
+  var html = '';
+  html += '<div class="row mt-3 mb-3">';
+  html += '<div class="col-md-12">';
+  html += '<div class="alert alert-light border mb-0">';
+  html += '<div class="d-flex justify-content-between align-items-center flex-wrap">';
+  html += '<div class="mb-2 mb-md-0">';
+  html += '<strong><i class="fa-solid fa-list-check"></i> 批量操作：</strong> ';
+  html += '<small class="text-muted">请先勾选要操作的产品（可使用表头的全选框）</small>';
+  html += '</div>';
+  html += '<div class="btn-group">';
+  html += '<button type="button" class="btn btn-primary btn-sm" onclick="batchEdit();">';
+  html += '<i class="fa-solid fa-pen-to-square"></i> 批量编辑';
+  html += '</button>';
+  html += '<button type="button" class="btn btn-success btn-sm" onclick="enableSelected();">';
+  html += '<i class="fa-solid fa-check"></i> 批量启用';
+  html += '</button>';
+  html += '<button type="button" class="btn btn-warning btn-sm" onclick="disableSelected();">';
+  html += '<i class="fa-solid fa-eye-slash"></i> 批量下架';
+  html += '</button>';
+  html += '<button type="button" class="btn btn-danger btn-sm" onclick="deleteSelected();">';
+  html += '<i class="fa-solid fa-trash"></i> 批量删除';
+  html += '</button>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+// 上传表单处理
+$('#form-upload').on('submit', function(e) {
+  e.preventDefault();
+  
+  var formData = new FormData(this);
+  
+  $('#upload-progress').show();
+  $('#upload-result').html('');
+  
+  $.ajax({
+    url: '{{ upload }}',
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    success: function(json) {
+      $('#upload-progress').hide();
+      
+      if (json.error) {
+        $('#upload-result').html('<div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-circle-exclamation"></i> ' + json.error + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+      }
+      
+      if (json.success) {
+        $('#upload-result').html('<div class="alert alert-success alert-dismissible"><i class="fa-solid fa-circle-check"></i> ' + json.success + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+        $('#form-upload')[0].reset();
+        
+        // 显示详细信息
+        if (json.details && json.details.errors && json.details.errors.length > 0) {
+          var errorHtml = '<div class="alert alert-warning mt-2"><strong>错误详情：</strong><ul class="mb-0">';
+          json.details.errors.forEach(function(error) {
+            errorHtml += '<li>' + error + '</li>';
+          });
+          errorHtml += '</ul></div>';
+          $('#upload-result').append(errorHtml);
+        }
+        
+        // 刷新产品列表
+        setTimeout(function() {
+          refreshList();
+        }, 2000);
+      }
+    },
+    error: function(xhr, status, error) {
+      $('#upload-progress').hide();
+      $('#upload-result').html('<div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-circle-exclamation"></i> 上传失败：' + error + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+    }
+  });
+});
+
+// 加载产品列表
+function loadProducts(page) {
+  page = page || 1;
+  
+  var filter_name = $('#input-filter-name').val();
+  var filter_status = $('#input-filter-status').val();
+  var filter_category_id = $('#input-filter-category').val();
+  var filter_image = $('#input-filter-image').val();
+  
+  // 直接构建test方法的URL，不依赖模板变量
+  var baseUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+  var url = baseUrl + '?route=catalog/product_database.test&user_token={{ user_token }}&page=' + page;
+  
+  if (filter_name) {
+    url += '&filter_name=' + encodeURIComponent(filter_name);
+  }
+  
+  if (filter_status !== '') {
+    url += '&filter_status=' + filter_status;
+  }
+  
+  if (filter_image !== '') {
+    url += '&filter_image=' + filter_image;
+  }
+  
+  if (filter_category_id) {
+    url += '&filter_category_id=' + filter_category_id;
+  }
+  
+  $.ajax({
+    url: url,
+    type: 'GET',
+    dataType: 'json',
+    success: function(json) {
+      var html = '<div class="table-responsive"><table class="table table-bordered table-hover">';
+      html += '<thead><tr>';
+      html += '<th style="width: 1px;" class="text-center"><input type="checkbox" onclick="$(\'input[name*=\\\'selected\\\']\').prop(\'checked\', $(this).prop(\'checked\'));"></th>';
+      html += '<th class="text-center">{{ column_id }}</th>';
+      html += '<th class="text-center">{{ column_image }}</th>';
+      html += '<th>{{ column_name }}</th>';
+      html += '<th>{{ column_model }}</th>';
+      html += '<th class="text-center" style="cursor: pointer;" onclick="sortBy(\'categories\');"><i class="fa-solid fa-folder-tree"></i> 商品分类' + getSortIcon('categories') + '</th>';
+      html += '<th class="text-end">{{ column_price }}</th>';
+      html += '<th class="text-end">{{ column_quantity }}</th>';
+      html += '<th class="text-center">{{ column_status }}</th>';
+      html += '<th class="text-center" style="width: 100px;">操作</th>';
+      html += '</tr></thead><tbody>';
+      
+      if (json.products && json.products.length > 0) {
+        json.products.forEach(function(product) {
+          var statusClass = product.status ? 'success' : 'danger';
+          var statusText = product.status_text;
+          // 构建完整的后台编辑URL
+          var adminPath = window.location.pathname.replace(/\/$/, ''); // 移除末尾斜杠
+          if (!adminPath.includes('index.php')) {
+            adminPath += '/index.php';
+          }
+          var editUrl = adminPath + '?route=catalog/product&user_token={{ user_token }}&product_id=' + product.product_id;
+          
+          html += '<tr>';
+          html += '<td class="text-center"><input type="checkbox" name="selected[]" value="' + product.product_id + '"></td>';
+          html += '<td class="text-center">' + product.product_id + '</td>';
+          html += '<td class="text-center"><img src="' + product.image + '" alt="' + product.name + '" class="img-thumbnail" style="max-width: 200px; max-height: 200px; object-fit: contain;"></td>';
+          html += '<td>' + product.name + '</td>';
+          html += '<td>' + product.model + '</td>';
+          html += '<td class="text-center"><small class="text-primary">' + (product.categories || '<span class="text-muted">未分类</span>') + '</small></td>';
+          html += '<td class="text-end">' + product.price + '</td>';
+          html += '<td class="text-end">' + product.quantity + '</td>';
+          html += '<td class="text-center"><span class="badge bg-' + statusClass + '">' + statusText + '</span></td>';
+          html += '<td class="text-center">';
+          html += '<div class="btn-group">';
+          html += '<button type="button" class="btn btn-sm btn-primary" onclick="quickEdit(' + product.product_id + ');" title="快速编辑">';
+          html += '<i class="fa-solid fa-pencil"></i> 编辑';
+          html += '</button>';
+          html += '<button type="button" class="btn btn-sm btn-info" onclick="window.open(\'index.php?route=catalog/product&user_token={{ user_token }}&product_id=' + product.product_id + '\', \'_blank\');" title="进入商品管理">';
+          html += '<i class="fa-solid fa-arrow-up-right-from-square"></i>';
+          html += '</button>';
+          html += '</div>';
+          html += '</td>';
+          html += '</tr>';
+        });
+      } else {
+        html += '<tr><td colspan="10" class="text-center">没有找到产品</td></tr>';
+      }
+      
+      html += '</tbody></table></div>';
+      
+      // 总是显示分页信息和结果
+      html += '<div class="row mt-3">';
+      html += '<div class="col-sm-6 text-start">' + (json.results || '') + '</div>';
+      html += '<div class="col-sm-6 text-end">' + (json.pagination || '') + '</div>';
+      html += '</div>';
+      
+      // 添加底部批量操作按钮
+      html += getBatchActionsHtml();
+      
+      $('#product-list').html(html);
+    },
+    error: function(xhr, status, error) {
+      console.log('Ajax Error:', xhr, status, error);
+      console.log('Response Text:', xhr.responseText);
+      var errorMsg = '加载失败';
+      if (xhr.status === 404) {
+        errorMsg += '：页面未找到 (404)';
+      } else if (xhr.status === 403) {
+        errorMsg += '：权限不足 (403)';
+      } else if (xhr.status === 500) {
+        errorMsg += '：服务器错误 (500)';
+      } else if (xhr.responseText) {
+        errorMsg += '：' + xhr.responseText.substring(0, 200);
+      } else {
+        errorMsg += '：' + error;
+      }
+      $('#product-list').html('<div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> ' + errorMsg + '<br><small>请按F12查看控制台获取详细信息</small></div>');
+    }
+  });
+}
+
+// 加载指定页码的产品
+function loadProductsPage(page) {
+  // 获取每页显示数量
+  var limit = $('#input-limit').val() || 100;
+  
+  // 和切换标签页一样，直接调用test方法
+  var testUrl = 'index.php?route=catalog/product_database.test&user_token={{ user_token }}&page=' + page + '&limit=' + limit;
+  
+  // 添加排序参数
+  testUrl += '&sort=' + encodeURIComponent(currentSort);
+  testUrl += '&order=' + encodeURIComponent(currentOrder);
+  
+  // 添加筛选条件
+  var filter_name = $('#input-filter-name').val();
+  var filter_status = $('#input-filter-status').val();
+  var filter_category_id = $('#input-filter-category').val();
+  var filter_image = $('#input-filter-image').val();
+  
+  if (filter_name) {
+    testUrl += '&filter_name=' + encodeURIComponent(filter_name);
+  }
+  if (filter_status !== '') {
+    testUrl += '&filter_status=' + filter_status;
+  }
+  if (filter_image !== '') {
+    testUrl += '&filter_image=' + filter_image;
+  }
+  if (filter_category_id) {
+    testUrl += '&filter_category_id=' + filter_category_id;
+  }
+  
+  console.log('加载第' + page + '页，URL:', testUrl);
+  
+  $.ajax({
+    url: testUrl,
+    type: 'GET',
+    dataType: 'json',
+    beforeSend: function() {
+      $('#product-list').html('<div class="text-center p-5"><i class="fa-solid fa-spinner fa-spin fa-3x"></i><p class="mt-3">加载中...</p></div>');
+    },
+    success: function(json) {
+      console.log('加载成功:', json);
+      
+      if (json.error) {
+        $('#product-list').html('<div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> ' + json.error + '</div>');
+        return;
+      }
+      
+      var html = '<div class="alert alert-success">✓ 成功加载 ' + json.total + ' 个产品</div>';
+      html += '<div class="table-responsive"><table class="table table-bordered table-hover">';
+      html += '<thead><tr>';
+      html += '<th style="width: 1px;" class="text-center"><input type="checkbox" onclick="$(\'input[name*=\\\'selected\\\']\').prop(\'checked\', $(this).prop(\'checked\'));"></th>';
+      html += getSortableHeader('p.product_id', 'ID');
+      html += '<th class="text-center">图片</th>';
+      html += '<th style="cursor: pointer;" onclick="sortBy(\'name\');">商品名称' + getSortIcon('name') + '</th>';
+      html += '<th style="cursor: pointer;" onclick="sortBy(\'p.model\');">商品型号' + getSortIcon('p.model') + '</th>';
+      html += '<th class="text-center" style="cursor: pointer;" onclick="sortBy(\'categories\');"><i class="fa-solid fa-folder-tree"></i> 商品分类' + getSortIcon('categories') + '</th>';
+      html += '<th class="text-end" style="cursor: pointer;" onclick="sortBy(\'p.price\');">价格' + getSortIcon('p.price') + '</th>';
+      html += '<th class="text-end" style="cursor: pointer;" onclick="sortBy(\'p.quantity\');">库存' + getSortIcon('p.quantity') + '</th>';
+      html += '<th class="text-center" style="cursor: pointer;" onclick="sortBy(\'p.status\');">状态' + getSortIcon('p.status') + '</th>';
+      html += '<th class="text-center" style="width: 100px;">操作</th>';
+      html += '</tr></thead><tbody>';
+      
+      if (json.products && json.products.length > 0) {
+        json.products.forEach(function(product) {
+          var statusClass = product.status ? 'success' : 'danger';
+          var statusText = product.status_text;
+          // 构建完整的后台编辑URL
+          var adminPath = window.location.pathname.replace(/\/$/, ''); // 移除末尾斜杠
+          if (!adminPath.includes('index.php')) {
+            adminPath += '/index.php';
+          }
+          var editUrl = adminPath + '?route=catalog/product&user_token={{ user_token }}&product_id=' + product.product_id;
+          
+          html += '<tr>';
+          html += '<td class="text-center"><input type="checkbox" name="selected[]" value="' + product.product_id + '"></td>';
+          html += '<td class="text-center">' + product.product_id + '</td>';
+          html += '<td class="text-center"><img src="' + product.image + '" alt="' + product.name + '" class="img-thumbnail" style="max-width: 200px; max-height: 200px; object-fit: contain;"></td>';
+          html += '<td>' + product.name + '</td>';
+          html += '<td>' + product.model + '</td>';
+          html += '<td class="text-center"><small class="text-primary">' + (product.categories || '<span class="text-muted">未分类</span>') + '</small></td>';
+          html += '<td class="text-end">' + product.price + '</td>';
+          html += '<td class="text-end">' + product.quantity + '</td>';
+          html += '<td class="text-center"><span class="badge bg-' + statusClass + '">' + statusText + '</span></td>';
+          html += '<td class="text-center">';
+          html += '<div class="btn-group">';
+          html += '<button type="button" class="btn btn-sm btn-primary" onclick="quickEdit(' + product.product_id + ');" title="快速编辑">';
+          html += '<i class="fa-solid fa-pencil"></i> 编辑';
+          html += '</button>';
+          html += '<button type="button" class="btn btn-sm btn-info" onclick="window.open(\'index.php?route=catalog/product&user_token={{ user_token }}&product_id=' + product.product_id + '\', \'_blank\');" title="进入商品管理">';
+          html += '<i class="fa-solid fa-arrow-up-right-from-square"></i>';
+          html += '</button>';
+          html += '</div>';
+          html += '</td>';
+          html += '</tr>';
+        });
+      } else {
+        html += '<tr><td colspan="10" class="text-center">没有找到产品</td></tr>';
+      }
+      
+      html += '</tbody></table></div>';
+      
+      // 总是显示分页信息和结果
+      html += '<div class="row mt-3">';
+      html += '<div class="col-sm-6 text-start">' + (json.results || '') + '</div>';
+      html += '<div class="col-sm-6 text-end">' + (json.pagination || '') + '</div>';
+      html += '</div>';
+      
+      // 添加底部批量操作按钮
+      html += getBatchActionsHtml();
+      
+      $('#product-list').html(html);
+    },
+    error: function(xhr, status, error) {
+      console.error('加载失败:', xhr, status, error);
+      $('#product-list').html('<div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> 加载失败</div>');
+    }
+  });
+}
+
+// 刷新列表
+function refreshList() {
+  loadProductsPage(1);
+}
+
+// 过滤产品
+function filterProducts() {
+  loadProductsPage(1);
+}
+
+// 清除过滤
+function clearFilter() {
+  $('#input-filter-name').val('');
+  $('#input-filter-status').val('');
+  $('#input-filter-image').val('');
+  $('#input-filter-category').val('');
+  loadProductsPage(1);
+}
+
+// 测试直接加载
+function testDirectLoad() {
+  var testUrl = '{{ user_token }}';
+  testUrl = window.location.protocol + '//' + window.location.host + '/admin67676/index.php?route=catalog/product_database.test&user_token=' + testUrl;
+  
+  alert('测试URL: ' + testUrl);
+  
+  $.ajax({
+    url: testUrl,
+    type: 'GET',
+    dataType: 'json',
+    success: function(json) {
+      console.log('Test Success:', json);
+      alert('测试成功！产品数量: ' + (json.products ? json.products.length : 0));
+      
+      if (json.products && json.products.length > 0) {
+        // 直接显示产品
+        var html = '<div class="alert alert-success">✓ 测试成功！找到 ' + json.total + ' 个产品</div>';
+        html += '<div class="table-responsive"><table class="table table-bordered table-hover">';
+        html += '<thead><tr>';
+        html += '<th>ID</th><th>产品名称</th><th>型号</th><th>价格</th><th>库存</th><th>状态</th>';
+        html += '</tr></thead><tbody>';
+        
+        json.products.forEach(function(p) {
+          html += '<tr>';
+          html += '<td>' + p.product_id + '</td>';
+          html += '<td>' + p.name + '</td>';
+          html += '<td>' + p.model + '</td>';
+          html += '<td>' + p.price + '</td>';
+          html += '<td>' + p.quantity + '</td>';
+          html += '<td><span class="badge bg-' + (p.status ? 'success' : 'danger') + '">' + p.status_text + '</span></td>';
+          html += '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+        
+        // 添加底部批量操作按钮
+        html += getBatchActionsHtml();
+        
+        $('#product-list').html(html);
+      }
+    },
+    error: function(xhr, status, error) {
+      console.log('Test Error:', xhr, status, error);
+      console.log('Response:', xhr.responseText);
+      alert('测试失败: ' + error + '\n状态: ' + xhr.status + '\n请查看控制台获取详细信息');
+    }
+  });
+}
+
+// 当切换到管理标签页时加载产品列表
+$('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+  if ($(e.target).attr('href') == '#manage') {
+    console.log('切换到产品管理标签页');
+    
+    // 直接调用test方法，不经过loadProducts
+    var testUrl = 'index.php?route=catalog/product_database.test&user_token={{ user_token }}';
+    
+    // 添加排序参数
+    testUrl += '&sort=' + encodeURIComponent(currentSort);
+    testUrl += '&order=' + encodeURIComponent(currentOrder);
+    
+    console.log('请求URL:', testUrl);
+    
+    $.ajax({
+      url: testUrl,
+      type: 'GET',
+      dataType: 'json',
+      beforeSend: function() {
+        $('#product-list').html('<div class="text-center p-5"><i class="fa-solid fa-spinner fa-spin fa-3x"></i><p class="mt-3">加载中...</p></div>');
+      },
+      success: function(json) {
+        console.log('加载成功:', json);
+        
+        if (json.error) {
+          $('#product-list').html('<div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> ' + json.error + '</div>');
+          return;
+        }
+        
+        var html = '<div class="alert alert-success">✓ 成功加载 ' + json.total + ' 个产品</div>';
+        html += '<div class="table-responsive"><table class="table table-bordered table-hover">';
+        html += '<thead><tr>';
+        html += '<th style="width: 1px;" class="text-center"><input type="checkbox" onclick="$(\'input[name*=\\\'selected\\\']\').prop(\'checked\', $(this).prop(\'checked\'));"></th>';
+        html += getSortableHeader('p.product_id', 'ID');
+        html += '<th class="text-center">图片</th>';
+        html += '<th style="cursor: pointer;" onclick="sortBy(\'name\');">商品名称' + getSortIcon('name') + '</th>';
+        html += '<th style="cursor: pointer;" onclick="sortBy(\'p.model\');">商品型号' + getSortIcon('p.model') + '</th>';
+        html += '<th class="text-center" style="cursor: pointer;" onclick="sortBy(\'categories\');"><i class="fa-solid fa-folder-tree"></i> 商品分类' + getSortIcon('categories') + '</th>';
+        html += '<th class="text-end" style="cursor: pointer;" onclick="sortBy(\'p.price\');">价格' + getSortIcon('p.price') + '</th>';
+        html += '<th class="text-end" style="cursor: pointer;" onclick="sortBy(\'p.quantity\');">库存' + getSortIcon('p.quantity') + '</th>';
+        html += '<th class="text-center" style="cursor: pointer;" onclick="sortBy(\'p.status\');">状态' + getSortIcon('p.status') + '</th>';
+        html += '<th class="text-center" style="width: 100px;">操作</th>';
+        html += '</tr></thead><tbody>';
+        
+        if (json.products && json.products.length > 0) {
+          json.products.forEach(function(product) {
+            var statusClass = product.status ? 'success' : 'danger';
+            var statusText = product.status_text;
+            
+            html += '<tr>';
+            html += '<td class="text-center"><input type="checkbox" name="selected[]" value="' + product.product_id + '"></td>';
+            html += '<td class="text-center">' + product.product_id + '</td>';
+            html += '<td class="text-center"><img src="' + product.image + '" alt="' + product.name + '" class="img-thumbnail" style="max-width: 200px; max-height: 200px; object-fit: contain;"></td>';
+            html += '<td>' + product.name + '</td>';
+            html += '<td>' + product.model + '</td>';
+            html += '<td class="text-center"><small class="text-primary">' + (product.categories || '<span class="text-muted">未分类</span>') + '</small></td>';
+            html += '<td class="text-end">' + product.price + '</td>';
+            html += '<td class="text-end">' + product.quantity + '</td>';
+            html += '<td class="text-center"><span class="badge bg-' + statusClass + '">' + statusText + '</span></td>';
+            html += '<td class="text-center">';
+            html += '<div class="btn-group">';
+            html += '<button type="button" class="btn btn-sm btn-primary" onclick="quickEdit(' + product.product_id + ');" title="快速编辑">';
+            html += '<i class="fa-solid fa-pencil"></i> 编辑';
+            html += '</button>';
+            html += '<button type="button" class="btn btn-sm btn-info" onclick="window.open(\'index.php?route=catalog/product&user_token={{ user_token }}&product_id=' + product.product_id + '\', \'_blank\');" title="进入商品管理">';
+            html += '<i class="fa-solid fa-arrow-up-right-from-square"></i>';
+            html += '</button>';
+            html += '</div>';
+            html += '</td>';
+            html += '</tr>';
+          });
+        } else {
+          html += '<tr><td colspan="10" class="text-center">没有找到产品</td></tr>';
+        }
+        
+        html += '</tbody></table></div>';
+        
+        if (json.results) {
+          html += '<div class="row mt-3">';
+          html += '<div class="col-sm-12 text-start">' + json.results + '</div>';
+          html += '</div>';
+        }
+        
+        // 添加底部批量操作按钮
+        html += getBatchActionsHtml();
+        
+        $('#product-list').html(html);
+      },
+      error: function(xhr, status, error) {
+        console.error('加载失败:', xhr, status, error);
+        console.error('响应文本:', xhr.responseText);
+        
+        var errorMsg = '加载失败';
+        if (xhr.status === 404) {
+          errorMsg += '：页面未找到 (404)';
+        } else if (xhr.status === 403) {
+          errorMsg += '：权限不足 (403)';
+        } else if (xhr.status === 500) {
+          errorMsg += '：服务器错误 (500)';
+        } else if (xhr.responseText) {
+          errorMsg += '：' + xhr.responseText.substring(0, 200);
+        } else {
+          errorMsg += '：' + error;
+        }
+        
+        $('#product-list').html('<div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> ' + errorMsg + '<br><small>请按F12打开控制台查看详细错误信息</small></div>');
+      }
+    });
+  }
+});
+
+// 快速编辑产品
+function quickEdit(product_id) {
+  console.log('快速编辑产品ID:', product_id);
+  
+  // 通过AJAX获取产品详情
+  $.ajax({
+    url: 'index.php?route=catalog/product_database.getProductInfo&user_token={{ user_token }}&product_id=' + product_id,
+    type: 'GET',
+    dataType: 'json',
+    beforeSend: function() {
+      // 可以添加加载动画
+    },
+    success: function(product) {
+      if (product && product.product_id) {
+        // 填充模态窗口数据
+        $('#edit-product-id').val(product.product_id);
+        $('#edit-product-name').val(product.name || '');
+        $('#edit-product-category').val(product.category_id || '');
+        $('#edit-product-model').val(product.model || '');
+        $('#edit-product-price').val(product.price || '0');
+        $('#edit-product-quantity').val(product.quantity || '0');
+        $('#edit-product-status').val(product.status || '0');
+        
+        // 显示模态窗口
+        $('#modal-quick-edit').modal('show');
+      } else if (product.error) {
+        alert('错误：' + product.error);
+      } else {
+        alert('无法加载产品信息');
+      }
+    },
+    error: function(xhr, status, error) {
+      console.error('加载失败:', xhr, status, error);
+      alert('加载产品信息失败，请稍后重试');
+    }
+  });
+}
+
+// 保存快速编辑
+function saveQuickEdit() {
+  var product_id = $('#edit-product-id').val();
+  var category_id = $('#edit-product-category').val();
+  
+  // 验证必填项
+  if (!category_id) {
+    alert('请选择商品分类！');
+    $('#edit-product-category').focus();
+    return;
+  }
+  
+  var data = {
+    product_id: product_id,
+    name: $('#edit-product-name').val(),
+    category_id: category_id,
+    model: $('#edit-product-model').val(),
+    price: $('#edit-product-price').val(),
+    quantity: $('#edit-product-quantity').val(),
+    status: $('#edit-product-status').val()
+  };
+  
+  $.ajax({
+    url: 'index.php?route=catalog/product_database.quickSave&user_token={{ user_token }}',
+    type: 'POST',
+    data: data,
+    dataType: 'json',
+    success: function(json) {
+      if (json.success) {
+        alert(json.success);
+        $('#modal-quick-edit').modal('hide');
+        refreshList();
+      } else if (json.error) {
+        alert(json.error);
+      }
+    },
+    error: function() {
+      alert('保存失败，请稍后重试');
+    }
+  });
+}
+
+// 快速启用产品
+function quickEnable() {
+  var product_id = $('#edit-product-id').val();
+  if (confirm('确认启用此产品？')) {
+    $.ajax({
+      url: 'index.php?route=catalog/product_database.enable&user_token={{ user_token }}',
+      type: 'POST',
+      data: {selected: [product_id]},
+      dataType: 'json',
+      success: function(json) {
+        if (json.success) {
+          alert(json.success);
+          $('#modal-quick-edit').modal('hide');
+          refreshList();
+        } else if (json.error) {
+          alert(json.error);
+        }
+      }
+    });
+  }
+}
+
+// 快速下架产品
+function quickDisable() {
+  var product_id = $('#edit-product-id').val();
+  if (confirm('确认下架此产品？')) {
+    $.ajax({
+      url: 'index.php?route=catalog/product_database.disable&user_token={{ user_token }}',
+      type: 'POST',
+      data: {selected: [product_id]},
+      dataType: 'json',
+      success: function(json) {
+        if (json.success) {
+          alert(json.success);
+          $('#modal-quick-edit').modal('hide');
+          refreshList();
+        } else if (json.error) {
+          alert(json.error);
+        }
+      }
+    });
+  }
+}
+
+// 快速删除产品
+function quickDelete() {
+  var product_id = $('#edit-product-id').val();
+  var product_name = $('#edit-product-name').val();
+  if (confirm('确认删除产品"' + product_name + '"？\n此操作不可撤销！')) {
+    $.ajax({
+      url: 'index.php?route=catalog/product_database.delete&user_token={{ user_token }}',
+      type: 'POST',
+      data: {selected: [product_id]},
+      dataType: 'json',
+      success: function(json) {
+        if (json.success) {
+          alert(json.success);
+          $('#modal-quick-edit').modal('hide');
+          refreshList();
+        } else if (json.error) {
+          alert(json.error);
+        }
+      }
+    });
+  }
+}
+
+// 批量启用产品
+function enableSelected() {
+  var selected = [];
+  $('input[name*=\'selected\']:checked').each(function() {
+    selected.push($(this).val());
+  });
+  
+  if (selected.length == 0) {
+    alert('请先选择要启用的产品！');
+    return;
+  }
+  
+  if (!confirm('确认启用选中的 ' + selected.length + ' 个产品？')) {
+    return;
+  }
+  
+  $.ajax({
+    url: 'index.php?route=catalog/product_database.enable&user_token={{ user_token }}',
+    type: 'POST',
+    data: {selected: selected},
+    dataType: 'json',
+    success: function(json) {
+      if (json.success) {
+        alert(json.success);
+        refreshList();
+      } else if (json.error) {
+        alert(json.error);
+      }
+    },
+    error: function(xhr, status, error) {
+      alert('批量启用失败！错误：' + error);
+      console.error('AJAX Error:', status, error);
+    }
+  });
+}
+
+// 批量下架产品
+function disableSelected() {
+  var selected = [];
+  $('input[name*=\'selected\']:checked').each(function() {
+    selected.push($(this).val());
+  });
+  
+  if (selected.length == 0) {
+    alert('请先选择要下架的产品！');
+    return;
+  }
+  
+  if (!confirm('确认下架选中的 ' + selected.length + ' 个产品？\n下架后前台将不显示这些产品。')) {
+    return;
+  }
+  
+  $.ajax({
+    url: 'index.php?route=catalog/product_database.disable&user_token={{ user_token }}',
+    type: 'POST',
+    data: {selected: selected},
+    dataType: 'json',
+    success: function(json) {
+      if (json.success) {
+        alert(json.success);
+        refreshList();
+      } else if (json.error) {
+        alert(json.error);
+      }
+    },
+    error: function(xhr, status, error) {
+      alert('批量下架失败！错误：' + error);
+      console.error('AJAX Error:', status, error);
+    }
+  });
+}
+
+// 批量删除产品
+function deleteSelected() {
+  var selected = [];
+  $('input[name*=\'selected\']:checked').each(function() {
+    selected.push($(this).val());
+  });
+  
+  if (selected.length == 0) {
+    alert('请先选择要删除的产品！');
+    return;
+  }
+  
+  if (!confirm('⚠️ 警告：确认删除选中的 ' + selected.length + ' 个产品？\n\n此操作将：\n✓ 从数据库中彻底删除这些产品\n✓ 删除所有相关数据（图片、属性、SKU等）\n✓ 此操作不可撤销！\n\n请再次确认是否继续？')) {
+    return;
+  }
+  
+  // 二次确认
+  if (!confirm('最后确认：真的要删除这 ' + selected.length + ' 个产品吗？')) {
+    return;
+  }
+  
+  $.ajax({
+    url: 'index.php?route=catalog/product_database.delete&user_token={{ user_token }}',
+    type: 'POST',
+    data: {selected: selected},
+    dataType: 'json',
+    success: function(json) {
+      if (json.success) {
+        alert('✓ ' + json.success);
+        refreshList();
+      } else if (json.error) {
+        alert('✗ ' + json.error);
+      }
+    },
+    error: function(xhr, status, error) {
+      alert('批量删除失败！错误：' + error);
+      console.error('AJAX Error:', status, error);
+      console.error('Response:', xhr.responseText);
+    }
+  });
+}
+
+// 批量编辑功能
+function batchEdit() {
+  var selected = [];
+  $('input[name*=\'selected\']:checked').each(function() {
+    selected.push($(this).val());
+  });
+  
+  if (selected.length == 0) {
+    alert('请先选择要编辑的产品！');
+    return;
+  }
+  
+  // 显示选中的产品数量
+  $('#batch-selected-count').text(selected.length);
+  
+  // 重置表单
+  $('#batch-modify-category').prop('checked', false);
+  $('#batch-modify-status').prop('checked', false);
+  $('#batch-modify-price').prop('checked', false);
+  $('#batch-modify-quantity').prop('checked', false);
+  
+  $('#batch-product-category').prop('disabled', true).val('');
+  $('#batch-product-status').prop('disabled', true).val('1');
+  $('#batch-product-price').prop('disabled', true).val('');
+  $('#batch-price-operation').prop('disabled', true).val('set');
+  $('#batch-product-quantity').prop('disabled', true).val('');
+  $('#batch-quantity-operation').prop('disabled', true).val('set');
+  
+  // 显示模态窗口
+  $('#modal-batch-edit').modal('show');
+}
+
+// 保存批量编辑
+function saveBatchEdit() {
+  var selected = [];
+  $('input[name*=\'selected\']:checked').each(function() {
+    selected.push($(this).val());
+  });
+  
+  if (selected.length == 0) {
+    alert('未选择任何产品！');
+    return;
+  }
+  
+  // 收集要修改的字段
+  var data = {
+    selected: selected,
+    modifications: {}
+  };
+  
+  if ($('#batch-modify-category').is(':checked')) {
+    var category_id = $('#batch-product-category').val();
+    if (!category_id) {
+      alert('请选择商品分类！');
+      return;
+    }
+    data.modifications.category_id = category_id;
+  }
+  
+  if ($('#batch-modify-status').is(':checked')) {
+    data.modifications.status = $('#batch-product-status').val();
+  }
+  
+  if ($('#batch-modify-price').is(':checked')) {
+    var price = $('#batch-product-price').val();
+    var operation = $('#batch-price-operation').val();
+    if (!price || price === '') {
+      alert('请输入价格值！');
+      return;
+    }
+    data.modifications.price = {
+      operation: operation,
+      value: parseFloat(price)
+    };
+  }
+  
+  if ($('#batch-modify-quantity').is(':checked')) {
+    var quantity = $('#batch-product-quantity').val();
+    var operation = $('#batch-quantity-operation').val();
+    if (!quantity || quantity === '') {
+      alert('请输入库存值！');
+      return;
+    }
+    data.modifications.quantity = {
+      operation: operation,
+      value: parseInt(quantity)
+    };
+  }
+  
+  if (Object.keys(data.modifications).length === 0) {
+    alert('请至少勾选一个要修改的字段！');
+    return;
+  }
+  
+  if (!confirm('确认批量修改 ' + selected.length + ' 个产品？\n修改将立即生效且在全站同步！')) {
+    return;
+  }
+  
+  $.ajax({
+    url: 'index.php?route=catalog/product_database.batchEdit&user_token={{ user_token }}',
+    type: 'POST',
+    data: data,
+    dataType: 'json',
+    success: function(json) {
+      if (json.success) {
+        alert(json.success);
+        $('#modal-batch-edit').modal('hide');
+        refreshList();
+      } else if (json.error) {
+        alert(json.error);
+      }
+    },
+    error: function() {
+      alert('批量编辑失败，请检查网络连接！');
+    }
+  });
+}
+
+// 控制批量编辑字段的启用/禁用
+$(document).ready(function() {
+  $('#batch-modify-category').change(function() {
+    $('#batch-product-category').prop('disabled', !$(this).is(':checked'));
+  });
+  
+  $('#batch-modify-status').change(function() {
+    $('#batch-product-status').prop('disabled', !$(this).is(':checked'));
+  });
+  
+  $('#batch-modify-price').change(function() {
+    var checked = $(this).is(':checked');
+    $('#batch-product-price').prop('disabled', !checked);
+    $('#batch-price-operation').prop('disabled', !checked);
+  });
+  
+  $('#batch-modify-quantity').change(function() {
+    var checked = $(this).is(':checked');
+    $('#batch-product-quantity').prop('disabled', !checked);
+    $('#batch-quantity-operation').prop('disabled', !checked);
+  });
+});
+</script>
+
+<!-- 快速编辑模态窗口 -->
+<div class="modal fade" id="modal-quick-edit" tabindex="-1" aria-labelledby="quickEditLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="quickEditLabel">
+          <i class="fa-solid fa-pencil"></i> 快速编辑产品
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-product-id">
+        
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="edit-product-name" class="form-label">
+              <i class="fa-solid fa-tag"></i> 商品名称 <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control" id="edit-product-name" required>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="edit-product-category" class="form-label">
+              <i class="fa-solid fa-folder-tree"></i> 商品分类 <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="edit-product-category" required>
+              <option value="">-- 选择分类（可选父级或子级）--</option>
+              {% for category in categories %}
+                <option value="{{ category.category_id }}">{{ category.name|raw }}</option>
+              {% endfor %}
+            </select>
+            <small class="text-muted mt-1">
+              <i class="fa-solid fa-lightbulb"></i> 提示：选择最具体的分类（如"音频设备 > 真无线耳机"）可获得更好的分类效果
+            </small>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="edit-product-model" class="form-label">
+              <i class="fa-solid fa-barcode"></i> 商品型号
+            </label>
+            <input type="text" class="form-control" id="edit-product-model">
+          </div>
+          <div class="col-md-6">
+            <label for="edit-product-status" class="form-label">
+              <i class="fa-solid fa-toggle-on"></i> 状态
+            </label>
+            <select class="form-select" id="edit-product-status">
+              <option value="1">启用</option>
+              <option value="0">禁用</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="edit-product-price" class="form-label">
+              <i class="fa-solid fa-dollar-sign"></i> 价格
+            </label>
+            <input type="number" class="form-control" id="edit-product-price" step="0.01" min="0">
+          </div>
+          <div class="col-md-6">
+            <label for="edit-product-quantity" class="form-label">
+              <i class="fa-solid fa-boxes-stacked"></i> 库存
+            </label>
+            <input type="number" class="form-control" id="edit-product-quantity" min="0">
+          </div>
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="fa-solid fa-info-circle"></i> 
+          <strong>提示：</strong>修改后将在全站同步生效。如需编辑更多详细信息（图片、描述、分类等），请点击"进入商品管理"按钮。
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" onclick="quickEnable();">
+          <i class="fa-solid fa-check"></i> 启用
+        </button>
+        <button type="button" class="btn btn-warning" onclick="quickDisable();">
+          <i class="fa-solid fa-eye-slash"></i> 下架
+        </button>
+        <button type="button" class="btn btn-danger" onclick="quickDelete();">
+          <i class="fa-solid fa-trash"></i> 删除
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fa-solid fa-times"></i> 取消
+        </button>
+        <button type="button" class="btn btn-primary" onclick="saveQuickEdit();">
+          <i class="fa-solid fa-save"></i> 保存修改
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 批量编辑模态窗口 -->
+<div class="modal fade" id="modal-batch-edit" tabindex="-1" aria-labelledby="batchEditLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="batchEditLabel">
+          <i class="fa-solid fa-pen-to-square"></i> 批量编辑产品
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="fa-solid fa-exclamation-triangle"></i>
+          <strong>注意：</strong>您已选中 <span id="batch-selected-count" class="fw-bold">0</span> 个产品。
+          请勾选要修改的字段，未勾选的字段将保持原值不变。
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="batch-modify-category">
+              <label class="form-check-label fw-bold" for="batch-modify-category">
+                <i class="fa-solid fa-folder-tree"></i> 修改商品分类
+              </label>
+            </div>
+            <select class="form-select mt-2" id="batch-product-category" disabled>
+              <option value="">-- 选择分类（可选父级或子级）--</option>
+              {% for category in categories %}
+                <option value="{{ category.category_id }}">{{ category.name|raw }}</option>
+              {% endfor %}
+            </select>
+            <small class="text-muted mt-1 d-block">
+              <i class="fa-solid fa-lightbulb"></i> 提示：所有选中的产品都将设置为此分类
+            </small>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="batch-modify-status">
+              <label class="form-check-label fw-bold" for="batch-modify-status">
+                <i class="fa-solid fa-toggle-on"></i> 修改状态
+              </label>
+            </div>
+            <select class="form-select mt-2" id="batch-product-status" disabled>
+              <option value="1">启用</option>
+              <option value="0">禁用</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="batch-modify-price">
+              <label class="form-check-label fw-bold" for="batch-modify-price">
+                <i class="fa-solid fa-dollar-sign"></i> 修改价格
+              </label>
+            </div>
+            <div class="input-group mt-2">
+              <select class="form-select" id="batch-price-operation" disabled style="max-width: 150px;">
+                <option value="set">设为</option>
+                <option value="increase">增加</option>
+                <option value="decrease">减少</option>
+                <option value="percent_increase">增加%</option>
+                <option value="percent_decrease">减少%</option>
+              </select>
+              <input type="number" class="form-control" id="batch-product-price" step="0.01" disabled>
+            </div>
+            <small class="text-muted">例: 增加 10 或 增加% 10 (增加10%)</small>
+          </div>
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="batch-modify-quantity">
+              <label class="form-check-label fw-bold" for="batch-modify-quantity">
+                <i class="fa-solid fa-boxes-stacked"></i> 修改库存
+              </label>
+            </div>
+            <div class="input-group mt-2">
+              <select class="form-select" id="batch-quantity-operation" disabled style="max-width: 150px;">
+                <option value="set">设为</option>
+                <option value="increase">增加</option>
+                <option value="decrease">减少</option>
+              </select>
+              <input type="number" class="form-control" id="batch-product-quantity" disabled>
+            </div>
+            <small class="text-muted">例: 设为 100 或 增加 50</small>
+          </div>
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="fa-solid fa-info-circle"></i>
+          <strong>提示：</strong>
+          <ul class="mb-0 mt-2">
+            <li>只有勾选的字段才会被修改</li>
+            <li>修改将应用到所有选中的产品</li>
+            <li>价格和库存支持多种操作方式（设置、增加、减少等）</li>
+            <li>修改后将在全站同步生效</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fa-solid fa-times"></i> 取消
+        </button>
+        <button type="button" class="btn btn-primary" onclick="saveBatchEdit();">
+          <i class="fa-solid fa-save"></i> 批量保存
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ footer }}
+

@@ -1,0 +1,316 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="button" id="button-check" class="btn btn-primary"><i class="fa-solid fa-search"></i> 检查产品</button>
+        <button type="button" id="button-update-all" class="btn btn-success" style="display:none;"><i class="fa-solid fa-magic"></i> 批量更新所有</button>
+      </div>
+      <h1>产品描述检查和补充工具</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header">
+        <i class="fa-solid fa-list"></i> 产品描述检查结果
+      </div>
+      <div class="card-body">
+        <div id="alert-container"></div>
+        
+        <div id="summary" style="display:none;">
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="card bg-primary text-white">
+                <div class="card-body">
+                  <h5 class="card-title">总产品数</h5>
+                  <h2 id="total-products">0</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-warning text-white">
+                <div class="card-body">
+                  <h5 class="card-title">需要改进</h5>
+                  <h2 id="needs-improvement">0</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-success text-white">
+                <div class="card-body">
+                  <h5 class="card-title">完善率</h5>
+                  <h2 id="completion-rate">0%</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="product-list" style="display:none;">
+          <h4>需要改进的产品列表</h4>
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>产品ID</th>
+                  <th>型号</th>
+                  <th>中文名称</th>
+                  <th>英文名称</th>
+                  <th>属性数</th>
+                  <th>中文描述</th>
+                  <th>英文描述</th>
+                  <th>问题</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="product-tbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div id="loading" class="text-center" style="display:none;">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2">正在检查产品...</p>
+        </div>
+        
+        <div id="empty-state" class="text-center p-5">
+          <i class="fa-solid fa-clipboard-check fa-5x text-muted mb-3"></i>
+          <p class="text-muted">点击"检查产品"按钮开始检查所有产品的描述</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 产品详情模态框 -->
+<div class="modal fade" id="product-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">产品详情</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modal-body-content">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        <button type="button" class="btn btn-primary" id="button-update-single">更新描述</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    let currentProducts = [];
+    let currentProductId = null;
+    
+    // 检查产品
+    $('#button-check').on('click', function() {
+        $('#loading').show();
+        $('#empty-state').hide();
+        $('#summary').hide();
+        $('#product-list').hide();
+        
+        $.ajax({
+            url: '{{ check_url }}',
+            type: 'GET',
+            dataType: 'json',
+            success: function(json) {
+                $('#loading').hide();
+                
+                if (json.products) {
+                    currentProducts = json.products;
+                    
+                    // 更新统计
+                    $('#total-products').text(json.total);
+                    $('#needs-improvement').text(json.needs_improvement);
+                    const rate = json.total > 0 ? Math.round(((json.total - json.needs_improvement) / json.total) * 100) : 100;
+                    $('#completion-rate').text(rate + '%');
+                    $('#summary').show();
+                    
+                    if (json.needs_improvement > 0) {
+                        $('#button-update-all').show();
+                        displayProducts(json.products);
+                        $('#product-list').show();
+                    } else {
+                        showAlert('所有产品描述都很完善！', 'success');
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                $('#loading').hide();
+                showAlert('检查失败：' + error, 'danger');
+            }
+        });
+    });
+    
+    // 显示产品列表
+    function displayProducts(products) {
+        let html = '';
+        
+        products.forEach(function(product) {
+            html += '<tr data-product-id="' + product.product_id + '">';
+            html += '<td>' + product.product_id + '</td>';
+            html += '<td>' + product.model + '</td>';
+            html += '<td>' + product.name_zh + '</td>';
+            html += '<td>' + product.name_en + '</td>';
+            html += '<td>' + product.attribute_count + '</td>';
+            html += '<td>' + product.description_zh_length + ' 字符</td>';
+            html += '<td>' + product.description_en_length + ' 字符</td>';
+            html += '<td><span class="badge bg-warning">' + product.issues.join(', ') + '</span></td>';
+            html += '<td>';
+            html += '<button type="button" class="btn btn-sm btn-info btn-view" data-id="' + product.product_id + '"><i class="fa-solid fa-eye"></i> 查看</button> ';
+            html += '<button type="button" class="btn btn-sm btn-success btn-update" data-id="' + product.product_id + '"><i class="fa-solid fa-magic"></i> 更新</button>';
+            html += '</td>';
+            html += '</tr>';
+        });
+        
+        $('#product-tbody').html(html);
+    }
+    
+    // 查看产品详情
+    $(document).on('click', '.btn-view', function() {
+        const productId = $(this).data('id');
+        const product = currentProducts.find(p => p.product_id == productId);
+        
+        if (product) {
+            let html = '<div class="product-details">';
+            html += '<p><strong>型号：</strong>' + product.model + '</p>';
+            html += '<p><strong>属性数量：</strong>' + product.attribute_count + '</p>';
+            
+            if (product.attributes && product.attributes.length > 0) {
+                html += '<h6>现有属性：</h6>';
+                html += '<ul>';
+                product.attributes.forEach(function(attr) {
+                    html += '<li>' + attr + '</li>';
+                });
+                html += '</ul>';
+            }
+            
+            html += '<h6>当前中文描述：</h6>';
+            html += '<p>' + (product.current_description_zh || '无') + '</p>';
+            
+            html += '<h6>当前英文描述：</h6>';
+            html += '<p>' + (product.current_description_en || '无') + '</p>';
+            
+            html += '</div>';
+            
+            $('#modal-body-content').html(html);
+            currentProductId = productId;
+            $('#product-modal').modal('show');
+        }
+    });
+    
+    // 更新单个产品
+    $(document).on('click', '.btn-update', function() {
+        const productId = $(this).data('id');
+        const btn = $(this);
+        
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 更新中...');
+        
+        updateProduct(productId, function(success) {
+            if (success) {
+                btn.closest('tr').fadeOut();
+                showAlert('产品 #' + productId + ' 描述已更新', 'success');
+            } else {
+                btn.prop('disabled', false).html('<i class="fa-solid fa-magic"></i> 更新');
+            }
+        });
+    });
+    
+    // 从模态框更新
+    $('#button-update-single').on('click', function() {
+        if (currentProductId) {
+            const btn = $(this);
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 更新中...');
+            
+            updateProduct(currentProductId, function(success) {
+                if (success) {
+                    $('#product-modal').modal('hide');
+                    $('tr[data-product-id="' + currentProductId + '"]').fadeOut();
+                    showAlert('产品描述已更新', 'success');
+                }
+                btn.prop('disabled', false).html('更新描述');
+            });
+        }
+    });
+    
+    // 批量更新所有
+    $('#button-update-all').on('click', function() {
+        if (!confirm('确定要批量更新所有需要改进的产品吗？这可能需要一些时间。')) {
+            return;
+        }
+        
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 批量更新中...');
+        
+        $.ajax({
+            url: '{{ update_url|replace({'update': 'updateAll'}) }}',
+            type: 'POST',
+            dataType: 'json',
+            success: function(json) {
+                btn.prop('disabled', false).html('<i class="fa-solid fa-magic"></i> 批量更新所有');
+                
+                if (json.success) {
+                    showAlert(json.success, 'success');
+                    $('#button-check').click(); // 重新检查
+                } else if (json.error) {
+                    showAlert(json.error, 'danger');
+                }
+            },
+            error: function() {
+                btn.prop('disabled', false).html('<i class="fa-solid fa-magic"></i> 批量更新所有');
+                showAlert('批量更新失败', 'danger');
+            }
+        });
+    });
+    
+    // 更新产品函数
+    function updateProduct(productId, callback) {
+        $.ajax({
+            url: '{{ update_url }}',
+            type: 'POST',
+            data: { product_id: productId },
+            dataType: 'json',
+            success: function(json) {
+                if (json.success) {
+                    callback(true);
+                } else if (json.error) {
+                    showAlert(json.error, 'danger');
+                    callback(false);
+                }
+            },
+            error: function() {
+                showAlert('更新失败', 'danger');
+                callback(false);
+            }
+        });
+    }
+    
+    // 显示提示
+    function showAlert(message, type) {
+        const alert = $('<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+            message +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+            '</div>');
+        
+        $('#alert-container').append(alert);
+        
+        setTimeout(function() {
+            alert.alert('close');
+        }, 5000);
+    }
+});
+</script>
+
+{{ footer }}
+

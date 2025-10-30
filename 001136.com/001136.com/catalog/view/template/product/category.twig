@@ -1,0 +1,254 @@
+{{ header }}
+<div id="product-category" class="container">
+  {# Professional Breadcrumb Navigation #}
+  <nav class="pro-breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      {% for breadcrumb in breadcrumbs %}
+        {% if loop.last %}
+          <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb.text }}</li>
+        {% else %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endif %}
+      {% endfor %}
+    </ol>
+  </nav>
+
+  {# Professional Category Header #}
+  <div class="category-header">
+    <div class="category-header__main">
+      <h1 class="category-title">{{ heading_title }}</h1>
+      {% if description %}
+        {% set clean_description = description|striptags %}
+        {% if clean_description|length > 150 %}
+          <div class="category-description">{{ clean_description|slice(0, 150) }}...</div>
+        {% else %}
+          <div class="category-description">{{ clean_description }}</div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row">
+    <div id="content" class="col-12">{{ content_top }}
+
+      {# Professional Filter Bar #}
+      {% if categories or manufacturers %}
+        <div class="pro-filter-bar">
+          {# Subcategory Navigation #}
+          {% if categories %}
+            <div class="filter-section filter-categories">
+              <div class="filter-section__header">
+                <i class="fa-solid fa-layer-group"></i>
+                <span class="filter-section__title">{{ text_refine or '分类' }}</span>
+              </div>
+              <div class="filter-section__content">
+                <div class="filter-tags">
+                  <a href="{{ continue }}" class="filter-tag{% if not request.get.path or request.get.path == path %} active{% endif %}">
+                    <i class="fa-solid fa-border-all"></i> {{ text_all_products or '全部产品' }}
+                  </a>
+                  {% for category in categories %}
+                    <a href="{{ category.href }}" class="filter-tag">
+                      {{ category.name }}
+                    </a>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+          
+          {# Brand Filter #}
+          {% if manufacturers %}
+            <div class="filter-section filter-brands">
+              <div class="filter-section__header">
+                <i class="fa-solid fa-star"></i>
+                <span class="filter-section__title">{{ text_brand or '品牌' }}</span>
+              </div>
+              <div class="filter-section__content">
+                <div class="filter-tags" data-brand-filter-list>
+                  {% for manufacturer in manufacturers %}
+                    <a href="{{ manufacturer.href }}" 
+                       class="filter-tag brand-tag{% if request.get.manufacturer_id == manufacturer.manufacturer_id %} active{% endif %}" 
+                       data-brand-item>
+                      {{ manufacturer.name }}
+                    </a>
+                  {% endfor %}
+                </div>
+                {% if manufacturers|length > 8 %}
+                  <button type="button" class="filter-toggle-btn" data-brand-toggle>
+                    <span data-toggle-text-more>
+                      <i class="fa-solid fa-angle-down"></i> {{ text_show_more or '显示更多品牌' }}
+                    </span>
+                    <span data-toggle-text-less style="display:none;">
+                      <i class="fa-solid fa-angle-up"></i> {{ text_show_less or '收起' }}
+                    </span>
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if products %}
+        {# Amazon-style toolbar #}
+        <div class="product-toolbar">
+          <div class="toolbar-left">
+            <div class="product-count">
+              <span>{{ results }}</span>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <div class="toolbar-controls">
+              <div class="view-switcher d-none d-lg-flex">
+                <button type="button" id="button-grid" class="view-btn active" data-bs-toggle="tooltip" title="{{ button_grid }}">
+                  <i class="fa-solid fa-table-cells"></i>
+                </button>
+                <button type="button" id="button-list" class="view-btn" data-bs-toggle="tooltip" title="{{ button_list }}">
+                  <i class="fa-solid fa-table-list"></i>
+                </button>
+              </div>
+              <div class="sort-control">
+                <label for="input-sort">{{ text_sort }}</label>
+                <select id="input-sort" class="form-select" onchange="location = this.value;">
+                  {% for sorts in sorts %}
+                    <option value="{{ sorts.href }}"{% if sorts.value == '%s-%s'|format(sort, order) %} selected{% endif %}>{{ sorts.text }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="limit-control">
+                <label for="input-limit">{{ text_limit }}</label>
+                <select id="input-limit" class="form-select" onchange="location = this.value;">
+                  {% for limits in limits %}
+                    <option value="{{ limits.href }}"{% if limits.value == limit %} selected{% endif %}>{{ limits.text }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="product-list" class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-4">
+          {% for product in products %}
+            <div class="col mb-3">{{ product }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="row">
+          <div class="col-sm-6 text-start">{{ pagination }}</div>
+          <div class="col-sm-6 text-end">{{ results }}</div>
+        </div>
+      {% endif %}
+      {% if not categories and not products %}
+        <p>{{ text_no_results }}</p>
+        <div class="text-end"><a href="{{ continue }}" class="btn btn-primary">{{ button_continue }}</a></div>
+      {% endif %}
+      {{ content_bottom }}</div>
+  </div>
+</div>
+{% if hero_slides|length > 1 %}
+<script type="text/javascript">
+//<![CDATA[
+(function() {
+  const wrapper = document.querySelector('[data-category-hero]');
+  if (!wrapper) {
+    return;
+  }
+
+  const slides = Array.from(wrapper.querySelectorAll('[data-category-hero-slide]'));
+  const dots = Array.from(document.querySelectorAll('[data-category-hero-dot]'));
+  if (!slides.length) {
+    return;
+  }
+
+  let index = 0;
+  let timer = null;
+
+  function activate(idx) {
+    slides[index].classList.remove('is-active');
+    if (dots[index]) {
+      dots[index].classList.remove('is-active');
+    }
+
+    index = idx;
+
+    slides[index].classList.add('is-active');
+    if (dots[index]) {
+      dots[index].classList.add('is-active');
+    }
+  }
+
+  function next() {
+    const idx = (index + 1) % slides.length;
+    activate(idx);
+  }
+
+  function start() {
+    stop();
+    timer = window.setInterval(next, 6000);
+  }
+
+  function stop() {
+    if (timer) {
+      window.clearInterval(timer);
+      timer = null;
+    }
+  }
+
+  if (dots.length) {
+    dots.forEach(function(dot) {
+      dot.addEventListener('click', function() {
+        const target = parseInt(dot.getAttribute('data-category-hero-dot'), 10);
+        if (!isNaN(target)) {
+          activate(target);
+          start();
+        }
+      });
+    });
+  }
+
+  wrapper.addEventListener('mouseenter', stop);
+  wrapper.addEventListener('mouseleave', start);
+
+  start();
+})();
+//]]>
+</script>
+{% endif %}
+
+{# Professional Brand Filter Toggle Script #}
+<script>
+//<![CDATA[
+(function() {
+  const toggleBtn = document.querySelector('[data-brand-toggle]');
+  if (!toggleBtn) return;
+
+  const filterList = document.querySelector('[data-brand-filter-list]');
+  const moreText = toggleBtn.querySelector('[data-toggle-text-more]');
+  const lessText = toggleBtn.querySelector('[data-toggle-text-less]');
+
+  toggleBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    const isExpanded = filterList.classList.contains('is-expanded');
+    
+    if (isExpanded) {
+      // 收起
+      filterList.classList.remove('is-expanded');
+      toggleBtn.classList.remove('is-expanded');
+      moreText.style.display = '';
+      lessText.style.display = 'none';
+      
+      // 平滑滚动到筛选栏顶部
+      filterList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      // 展开
+      filterList.classList.add('is-expanded');
+      toggleBtn.classList.add('is-expanded');
+      moreText.style.display = 'none';
+      lessText.style.display = '';
+    }
+  });
+})();
+//]]>
+</script>
+
+{{ footer }}

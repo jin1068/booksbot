@@ -1,0 +1,6 @@
+<form action="{{ search_url }}" method="get" class="input-group top-search__form">
+	<input type="hidden" name="route" value="product/search"/>
+	<input type="hidden" name="language" value="{{ language }}"/>
+	<input type="text" name="search" value="{{ search }}" placeholder="{{ text_search }}" class="form-control form-control-lg"/>
+	<button type="submit" class="btn btn-light btn-lg"><i class="fa-solid fa-magnifying-glass"></i></button>
+</form>

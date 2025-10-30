@@ -1,0 +1,205 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="button" id="button-export" data-bs-toggle="tooltip" title="导出当前所有产品" class="btn btn-success"><i class="fa-solid fa-download"></i> 导出产品SEO信息</button>
+      </div>
+      <h1>产品SEO批量管理</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-list"></i> 产品SEO信息批量管理</div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <h4><i class="fa-solid fa-info-circle"></i> 使用说明</h4>
+          <p>本工具用于批量管理产品的描述、Meta标签等SEO信息，确保中英文版本分离。</p>
+          <ul>
+            <li><strong>导出功能</strong>：将当前所有启用产品的信息导出为CSV文件</li>
+            <li><strong>下载模板</strong>：下载空白的CSV模板，按格式填写</li>
+            <li><strong>导入功能</strong>：上传填写好的CSV文件，批量更新产品信息</li>
+          </ul>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header bg-primary text-white">
+                <i class="fa-solid fa-download"></i> 步骤1：导出或下载模板
+              </div>
+              <div class="card-body">
+                <p>选择以下一种方式获取CSV文件：</p>
+                <button type="button" id="button-export-full" class="btn btn-success me-2">
+                  <i class="fa-solid fa-file-export"></i> 导出现有产品数据
+                </button>
+                <button type="button" id="button-download-template" class="btn btn-info">
+                  <i class="fa-solid fa-file-download"></i> 下载空白模板
+                </button>
+                <div class="form-text">
+                  <strong>导出现有产品：</strong>包含所有产品的当前信息，可以在此基础上修改<br>
+                  <strong>下载空白模板：</strong>空白模板，包含示例数据，适合新手了解格式
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header bg-warning text-dark">
+                <i class="fa-solid fa-edit"></i> 步骤2：编辑CSV文件
+              </div>
+              <div class="card-body">
+                <h5>重要提示：</h5>
+                <ul>
+                  <li><strong class="text-danger">中英文内容必须分离</strong>：不要在英文列填写中文，不要在中文列填写英文</li>
+                  <li>支持的字段：
+                    <ul>
+                      <li><strong>产品名称</strong>：产品显示名称</li>
+                      <li><strong>产品描述</strong>：详细描述，支持HTML标签</li>
+                      <li><strong>Meta标题</strong>：SEO标题（建议50-60字符）</li>
+                      <li><strong>Meta描述</strong>：SEO描述（建议150-160字符）</li>
+                      <li><strong>Meta关键字</strong>：搜索关键字，用逗号分隔</li>
+                      <li><strong>标签</strong>：产品标签，用逗号分隔</li>
+                    </ul>
+                  </li>
+                  <li>留空的字段将保持原值不变</li>
+                  <li>使用Excel或WPS Office打开并编辑CSV文件</li>
+                  <li>保存时确保使用UTF-8编码</li>
+                </ul>
+
+                <h5 class="mt-3">中英文内容示例：</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="border p-3 bg-light">
+                      <h6 class="text-success">✓ 正确示例（中文版）</h6>
+                      <p><strong>名称：</strong>苹果 iPhone 15 Pro</p>
+                      <p><strong>描述：</strong>配备钛金属设计和A17 Pro芯片的高端智能手机</p>
+                      <p><strong>Meta标题：</strong>苹果 iPhone 15 Pro - 钛金属设计 | 高端智能手机</p>
+                      <p><strong>关键字：</strong>iPhone,苹果手机,智能手机,A17芯片</p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="border p-3 bg-light">
+                      <h6 class="text-success">✓ 正确示例（英文版）</h6>
+                      <p><strong>Name:</strong> Apple iPhone 15 Pro</p>
+                      <p><strong>Description:</strong> Premium smartphone with titanium design and A17 Pro chip</p>
+                      <p><strong>Meta Title:</strong> Apple iPhone 15 Pro - Titanium Design | Premium Smartphone</p>
+                      <p><strong>Keywords:</strong> iPhone,Apple phone,smartphone,A17 chip</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border p-3 bg-danger text-white mt-3">
+                  <h6>✗ 错误示例（混用）</h6>
+                  <p><strong>英文版中出现中文：</strong> Apple iPhone 15 Pro 苹果手机 ← 错误！</p>
+                  <p><strong>中文版中出现英文：</strong> 苹果 iPhone fifteen pro ← 品牌名除外，避免过多英文</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header bg-success text-white">
+                <i class="fa-solid fa-upload"></i> 步骤3：上传CSV文件
+              </div>
+              <div class="card-body">
+                <form id="form-upload" method="post" enctype="multipart/form-data">
+                  <div class="mb-3">
+                    <label for="input-file" class="form-label">选择CSV文件：</label>
+                    <input type="file" name="file" id="input-file" class="form-control" accept=".csv" required />
+                    <div class="form-text">只支持CSV格式文件，确保使用UTF-8编码</div>
+                  </div>
+                  <button type="submit" id="button-import" class="btn btn-primary">
+                    <i class="fa-solid fa-upload"></i> 开始导入
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="alert-container"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+// 导出完整产品数据
+$('#button-export, #button-export-full').on('click', function() {
+    window.location = '{{ export_url }}';
+});
+
+// 下载空白模板
+$('#button-download-template').on('click', function() {
+    window.location = '{{ template_url }}';
+});
+
+// 导入处理
+$('#form-upload').on('submit', function(e) {
+    e.preventDefault();
+    
+    var formData = new FormData(this);
+    
+    $('#button-import').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 正在导入...');
+    
+    $.ajax({
+        url: '{{ import_url }}',
+        type: 'POST',
+        data: formData,
+        dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function(json) {
+            $('#alert-container').html('');
+            
+            if (json.error) {
+                $('#alert-container').html('<div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-exclamation-circle"></i> ' + json.error + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+            }
+            
+            if (json.success) {
+                var html = '<div class="alert alert-success alert-dismissible"><i class="fa-solid fa-check-circle"></i> ' + json.success;
+                
+                if (json.warning) {
+                    html += '<br><strong>警告：</strong>' + json.warning;
+                }
+                
+                if (json.errors && json.errors.length > 0) {
+                    html += '<br><strong>错误详情：</strong><ul>';
+                    json.errors.forEach(function(error) {
+                        html += '<li>' + error + '</li>';
+                    });
+                    html += '</ul>';
+                }
+                
+                html += '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+                $('#alert-container').html(html);
+                
+                // 清空文件选择
+                $('#input-file').val('');
+            }
+            
+            $('#button-import').prop('disabled', false).html('<i class="fa-solid fa-upload"></i> 开始导入');
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+            $('#alert-container').html('<div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-exclamation-circle"></i> 导入失败：' + thrownError + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+            $('#button-import').prop('disabled', false).html('<i class="fa-solid fa-upload"></i> 开始导入');
+        }
+    });
+});
+</script>
+
+{{ footer }}
+

@@ -1,0 +1,877 @@
+﻿{{ header }}
+<div class="container jd-product">
+  <ul class="breadcrumb">
+    {% for breadcrumb in breadcrumbs %}
+      <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+    {% endfor %}
+  </ul>
+
+  <div class="row">
+    {{ column_left }}
+    <div id="content" class="col">
+      {{ content_top }}
+
+      <div class="row gx-4 gy-4 jd-product__hero">
+        <div class="col-xl-5 col-lg-6">
+          {% set stage_type = 'image' %}
+          {% set stage_src = thumb %}
+          {% set stage_popup = popup|default('') %}
+          {% set stage_poster = '' %}
+
+          {% if not stage_src %}
+            {% if images %}
+              {% set stage_src = images[0].thumb %}
+              {% set stage_popup = images[0].popup %}
+            {% elseif media.video %}
+              {% set stage_type = 'video' %}
+              {% set stage_src = media.video %}
+              {% set stage_poster = media.poster %}
+            {% elseif media.model3d %}
+              {% set stage_type = 'model' %}
+              {% set stage_src = media.model3d %}
+            {% endif %}
+          {% endif %}
+
+          {# Auto Carousel Container #}
+          <div class="product-carousel-wrapper">
+            <div class="product-carousel">
+              <div class="carousel-main">
+                <div class="carousel-slides">
+                  {% if thumb %}
+                    <div class="carousel-slide active" data-index="0">
+                      <a href="{{ popup ?: thumb }}" class="carousel-link magnific-popup" title="{{ heading_title }}">
+                        <img src="{{ popup ?: thumb }}" alt="{{ heading_title }}" class="img-fluid"/>
+                      </a>
+                    </div>
+                  {% endif %}
+                  {% for image in images %}
+                    <div class="carousel-slide" data-index="{{ loop.index }}">
+                      <a href="{{ image.popup }}" class="carousel-link magnific-popup" title="{{ heading_title }}">
+                        <img src="{{ image.popup }}" alt="{{ heading_title }} {{ loop.index }}" class="img-fluid"/>
+                      </a>
+                    </div>
+                  {% endfor %}
+                  {% if media.video %}
+                    <div class="carousel-slide" data-index="{{ images|length + 1 }}">
+                      <video class="carousel-video" controls preload="metadata" {% if media.poster %}poster="{{ media.poster }}"{% endif %}>
+                        <source src="{{ media.video }}" type="video/mp4"/>
+                      </video>
+                    </div>
+                  {% endif %}
+                </div>
+                
+                {# Navigation Buttons #}
+                <button class="carousel-btn carousel-prev" type="button" aria-label="Previous">
+                  <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button class="carousel-btn carousel-next" type="button" aria-label="Next">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                
+                {# Pagination Dots #}
+                <div class="carousel-pagination">
+                  {% set total_slides = (thumb ? 1 : 0) + (images|length) + (media.video ? 1 : 0) %}
+                  {% for i in 0..(total_slides - 1) %}
+                    <span class="carousel-dot{% if i == 0 %} active{% endif %}" data-index="{{ i }}"></span>
+                  {% endfor %}
+                </div>
+              </div>
+              
+              {# Thumbnail Gallery #}
+              {% if thumb or images %}
+                <div class="carousel-thumbs">
+                  {% if thumb %}
+                    <div class="carousel-thumb active" data-index="0">
+                      <img src="{{ thumb }}" alt="{{ heading_title }}" class="img-fluid"/>
+                    </div>
+                  {% endif %}
+                  {% for image in images %}
+                    <div class="carousel-thumb" data-index="{{ loop.index }}">
+                      <img src="{{ image.thumb }}" alt="{{ heading_title }} {{ loop.index }}" class="img-fluid"/>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-7 col-lg-6">
+          <div class="jd-summary">
+            <h1 class="jd-summary__title">{{ heading_title }}</h1>
+
+            <ul class="jd-summary__meta list-unstyled mb-3">
+              {% if manufacturer %}
+                <li>{{ text_manufacturer }} <a href="{{ manufacturers }}">{{ manufacturer }}</a></li>
+              {% endif %}
+              <li>{{ text_model }} {{ model }}</li>
+              {% if stock %}<li>{{ text_stock }} {{ stock }}</li>{% endif %}
+            </ul>
+
+            <div class="jd-price-box">
+              <div class="jd-price-box__line">
+                <span class="jd-price-box__label">{{ text_price_label }}</span>
+                <span class="jd-price-box__value" id="jd-price-final">{{ jd_price.final }}</span>
+                {% if jd_price.original %}
+                  <span class="jd-price-box__original" id="jd-price-original">{{ jd_price.original }}</span>
+                {% endif %}
+              </div>
+              <div class="jd-price-box__line jd-price-box__line--discount{% if not jd_price.discount_label %} d-none{% endif %}" id="jd-price-discount">
+                {% if jd_price.discount_label %}
+                  {{ jd_price.discount_label }}
+                {% endif %}
+              </div>
+              <div class="jd-price-box__promo">
+                <span class="jd-price-box__promo-tag">{{ jd_price.promotion_tag }}</span>
+                <div class="jd-price-box__promo-list">
+                  {% for promo in jd_price.promotion %}
+                    <span>{{ promo.label }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <div class="jd-summary__services mb-3">
+              <span class="jd-summary__services-label">{{ text_delivery_label }}</span>
+              <button type="button" class="btn btn-light btn-sm" id="jd-delivery-trigger" data-address='{{ address_prompt|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}'>
+                {% if address_prompt.is_logged and address_prompt.has_address %}
+                  {{ address_prompt.default.full ?? text_delivery_default }}
+                {% elseif address_prompt.is_logged %}
+                  {{ text_delivery_select }}
+                {% else %}
+                  {{ text_delivery_login }}
+                {% endif %}
+              </button>
+              <small class="text-muted d-block mt-1">{{ text_delivery_hint }}</small>
+            </div>
+
+            <form method="post" data-oc-toggle="ajax" class="jd-wish-form mb-3">
+              <input type="hidden" name="product_id" value="{{ product_id }}">
+              <button type="submit" formaction="{{ wishlist_add }}" data-bs-toggle="tooltip" class="btn btn-outline-secondary me-2" title="{{ button_wishlist }}"><i class="fa-regular fa-heart"></i> {{ button_wishlist }}</button>
+              <button type="submit" formaction="{{ compare_add }}" data-bs-toggle="tooltip" class="btn btn-outline-secondary" title="{{ button_compare }}"><i class="fa-solid fa-scale-balanced"></i> {{ button_compare }}</button>
+            </form>
+
+            <form id="form-product" class="jd-configurator">
+              <input type="hidden" name="product_id" value="{{ product_id }}">
+
+              {# Plan B: Dynamic rendering of all option groups #}
+              {% for group_key, group in configurator %}
+                <div class="jd-configurator__group" data-group="{{ group_key }}">
+                  <div class="jd-configurator__label">{{ group.label }}</div>
+                  
+                  {# Button style (for size, style) #}
+                  {% if group.display_type == 'button' %}
+                    <div class="jd-option-grid jd-option-grid--button">
+                      {% for option in group.values %}
+                        <label class="jd-option-item jd-option-item--button{% if loop.first %} is-active{% endif %}"
+                               data-final="{{ option.final_raw }}"
+                               data-original="{{ option.original_raw }}"
+                               data-discount="{{ option.discount_raw }}"
+                               data-discount-label="{{ option.discount_label }}">
+                          <input type="radio" name="option[{{ group.product_option_id }}]" value="{{ option.product_option_value_id }}" {% if loop.first %}checked{% endif %}>
+                          <span class="jd-option-item__name">{{ option.name }}</span>
+                          {% if option.diff and option.diff_raw > 0 %}
+                            <span class="jd-option-item__price">{{ option.diff }}</span>
+                          {% endif %}
+                        </label>
+                      {% endfor %}
+                    </div>
+                  
+                  {# Image style (for color combinations) #}
+                  {% elseif group.display_type == 'image' %}
+                    <div class="jd-option-grid jd-option-grid--image">
+                      {% for option in group.values %}
+         <label class="jd-option-item jd-option-item--image{% if loop.first %} is-active{% endif %}"
+           {% if option.image %}data-image="{{ option.image|escape('html_attr') }}"{% elseif option.swatch and option.swatch.type == 'image' %}data-image="{{ option.swatch.value|escape('html_attr') }}"{% endif %}
+           {% if option.full_image %}data-popup="{{ option.full_image|escape('html_attr') }}"{% elseif option.image %}data-popup="{{ option.image|escape('html_attr') }}"{% endif %}
+           {% if option.full_image %}data-stage="{{ option.full_image|escape('html_attr') }}"{% elseif option.image %}data-stage="{{ option.image|escape('html_attr') }}"{% elseif option.swatch and option.swatch.type == 'image' %}data-stage="{{ option.swatch.value|escape('html_attr') }}"{% endif %}>
+                          <input type="radio" name="option[{{ group.product_option_id }}]" value="{{ option.product_option_value_id }}" {% if loop.first %}checked{% endif %}>
+                          <div class="jd-option-item__thumbnail" data-role="option-preview">
+                            {% if option.image %}
+                              <img src="{{ option.image }}" alt="{{ option.name }}">
+                            {% elseif option.swatch and option.swatch.type == 'image' %}
+                              <img src="{{ option.swatch.value }}" alt="{{ option.name }}">
+                            {% endif %}
+                          </div>
+                          <span class="jd-option-item__name">{{ option.name }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                    {% if group.price_range %}
+                      <div class="jd-option-price-range text-muted small mt-2">{{ group.price_range }}</div>
+                    {% endif %}
+                  
+                  {# Swatch style (for simple colors) #}
+                  {% elseif group.display_type == 'swatch' %}
+                    <div class="jd-option-grid jd-option-grid--swatch">
+                      {% for option in group.values %}
+         <label class="jd-option-item jd-option-item--swatch{% if loop.first %} is-active{% endif %}"
+           {% if option.image %}data-image="{{ option.image|escape('html_attr') }}"{% elseif option.swatch and option.swatch.type == 'image' %}data-image="{{ option.swatch.value|escape('html_attr') }}"{% endif %}
+           {% if option.full_image %}data-popup="{{ option.full_image|escape('html_attr') }}"{% elseif option.image %}data-popup="{{ option.image|escape('html_attr') }}"{% endif %}
+           {% if option.full_image %}data-stage="{{ option.full_image|escape('html_attr') }}"{% elseif option.image %}data-stage="{{ option.image|escape('html_attr') }}"{% elseif option.swatch and option.swatch.type == 'image' %}data-stage="{{ option.swatch.value|escape('html_attr') }}"{% endif %}>
+                          <input type="radio" name="option[{{ group.product_option_id }}]" value="{{ option.product_option_value_id }}" {% if loop.first %}checked{% endif %}>
+                          {% if option.swatch %}
+                            <span class="jd-option-item__swatch{% if option.swatch.type == 'image' %} has-image{% elseif option.swatch.type == 'initial' %} has-initial{% endif %}"
+                                  {% if option.swatch.type == 'image' %}data-role="option-preview"{% endif %}
+                                  {% if option.swatch.type == 'color' %}style="--swatch-color: {{ option.swatch.value|escape('html_attr') }}"{% endif %}>
+                              {% if option.swatch.type == 'image' %}
+                                <img src="{{ option.swatch.value|escape('html_attr') }}" alt="{{ option.name|escape }}">
+                              {% elseif option.swatch.type == 'initial' %}
+                                <span>{{ option.swatch.value|escape }}</span>
+                              {% endif %}
+                            </span>
+                          {% endif %}
+                          <span class="jd-option-item__name">{{ option.name }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  
+                  {# Default style (fallback) #}
+                  {% else %}
+                    <div class="jd-option-grid">
+                      {% for option in group.values %}
+                        <label class="jd-option-item{% if loop.first %} is-active{% endif %}"
+                               data-final="{{ option.final_raw }}"
+                               data-original="{{ option.original_raw }}"
+                               data-discount="{{ option.discount_raw }}"
+                               data-discount-label="{{ option.discount_label }}"
+                               {% if option.image %}data-image="{{ option.image|escape('html_attr') }}"{% endif %}>
+                          <input type="radio" name="option[{{ group.product_option_id }}]" value="{{ option.product_option_value_id }}" {% if loop.first %}checked{% endif %}>
+                          <span class="jd-option-item__name">{{ option.name }}</span>
+                          {% if option.diff %}
+                            <span class="jd-option-item__price">{{ option.diff }}</span>
+                          {% endif %}
+                        </label>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+
+              <div class="jd-configurator__group">
+                <div class="jd-configurator__label">{{ entry_qty }}</div>
+                <div class="jd-quantity" data-min="{{ minimum }}">
+                  <button type="button" class="btn btn-light jd-quantity__btn" data-action="decrease">-</button>
+                  <input type="text" name="quantity" value="{{ minimum }}" id="input-quantity" class="form-control jd-quantity__input"/>
+                  <button type="button" class="btn btn-light jd-quantity__btn" data-action="increase">+</button>
+                </div>
+                {% if minimum > 1 %}
+                  <div class="text-warning small mt-1">{{ text_minimum }}</div>
+                {% endif %}
+              </div>
+
+              <div class="jd-actions">
+                {% if spec_compare %}
+                  <button type="button" class="btn btn-outline-secondary jd-actions__compare" data-bs-toggle="modal" data-bs-target="#jd-compare-modal">{{ button_compare_specs }}</button>
+                {% endif %}
+                <div class="jd-actions__buttons d-flex gap-3">
+                  <button type="button" id="button-buy-now" class="btn btn-primary btn-lg jd-actions__buy-now flex-fill">
+                    <i class="fa-solid fa-bolt"></i> {{ button_buy_now }}
+                  </button>
+                  <button type="submit" id="button-cart" class="btn btn-primary btn-lg jd-actions__cart flex-fill">
+                    <i class="fa-solid fa-shopping-cart"></i> {{ button_cart }}
+                  </button>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-lg jd-actions__notify" id="jd-notify-btn" data-message="{{ notify_message }}">{{ button_notify }}</button>
+              </div>
+            </form>
+
+            {% if review_status %}
+              <div class="jd-rating mt-3">
+                <div class="jd-rating__stars">
+                  {% for i in 1..5 %}
+                    {% if rating < i %}
+                      <span class="fa-stack"><i class="fa-regular fa-star fa-stack-1x"></i></span>
+                    {% else %}
+                      <span class="fa-stack"><i class="fa-solid fa-star fa-stack-1x"></i><i class="fa-regular fa-star fa-stack-1x"></i></span>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                <a href="#" class="jd-rating__link" onclick="$('a[href=\'#tab-review\']').tab('show'); return false;">{{ text_reviews }}</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% if picture_group %}
+        <div class="card shadow-sm mb-4">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h5 class="mb-0">{{ text_picture_group }}</h5>
+          </div>
+          <div class="card-body jd-picture-group">
+            <div class="jd-picture-grid" id="jd-picture-grid">
+              {% for picture in picture_group %}
+                <a href="{{ picture.popup }}" class="jd-picture-item" data-caption="{{ picture.alt }}">
+                  <img src="{{ picture.thumb }}" alt="{{ picture.alt }} picture {{ loop.index }}">
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="row mt-4 jd-detail">
+        <div class="col-lg-9">
+          <ul class="nav nav-tabs">
+            <li class="nav-item"><a href="#tab-description" data-bs-toggle="tab" class="nav-link active">{{ tab_description }}</a></li>
+            {% if attribute_groups %}<li class="nav-item"><a href="#tab-specification" data-bs-toggle="tab" class="nav-link">{{ tab_attribute }}</a></li>{% endif %}
+            {% if review_status %}<li class="nav-item"><a href="#tab-review" data-bs-toggle="tab" class="nav-link">{{ tab_review }}</a></li>{% endif %}
+          </ul>
+          <div class="tab-content">
+            <div id="tab-description" class="tab-pane fade show active">{{ description }}</div>
+            {% if attribute_groups %}
+              <div id="tab-specification" class="tab-pane fade">
+                <div class="table-responsive">
+                  <table class="table table-bordered jd-spec-table" id="jd-spec-table" data-labels='{{ spec_label_map|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}'>
+                    {% for attribute_group in attribute_groups %}
+                      <thead>
+                        <tr>
+                          <td colspan="2"><strong>{{ attribute_group.name }}</strong></td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for attribute in attribute_group.attribute %}
+                          <tr>
+                            <td>{{ attribute.name }}</td>
+                            <td data-attribute="{{ attribute.name }}">{{ attribute.text }}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    {% endfor %}
+                  </table>
+                </div>
+              </div>
+            {% endif %}
+            {% if review_status %}
+              <div id="tab-review" class="tab-pane fade">{{ review }}</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="jd-side-media">
+            {% if images %}
+              {% set side_image = images|first %}
+              <img src="{{ side_image.thumb }}" alt="{{ heading_title }} extra" class="img-fluid rounded shadow-sm"/>
+            {% elseif thumb %}
+              <img src="{{ thumb }}" alt="{{ heading_title }} extra" class="img-fluid rounded shadow-sm"/>
+            {% else %}
+              <div class="jd-side-media__placeholder">{{ text_media_placeholder }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+{% if spec_compare %}
+        <div class="modal fade" id="jd-compare-modal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">{{ text_compare_specs }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover align-middle jd-compare-table">
+                    <thead>
+                      <tr>
+                        <th>{{ text_spec_column }}</th>
+                        {% for row in spec_compare.rows %}
+                          <th class="{% if row.is_current %}table-primary{% endif %}">{{ row.name }}</th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for column in spec_compare.columns %}
+                        <tr>
+                          <th>{{ column }}</th>
+                          {% for row in spec_compare.rows %}
+                            <td class="{% if row.is_current %}table-primary{% endif %}">{{ row.values[loop.parent.loop.index0] }}</td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ button_close }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {{ related }}
+      {{ content_bottom }}
+    </div>
+    {{ column_right }}
+  </div>
+</div>
+
+<div class="modal fade" id="jd-address-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ text_address_modal_title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>{{ text_address_modal_body }}</p>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-primary" id="jd-address-modal-confirm" href="#">{{ button_address_manage }}</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ button_address_later }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if model_viewer %}
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+{% endif %}
+
+<script type="text/javascript"><!--
+// Add to Cart - Standard behavior
+$('#form-product').on('submit', function(e) {
+  e.preventDefault();
+
+  $.ajax({
+    url: 'index.php?route=checkout/cart.add&language={{ language }}',
+    type: 'post',
+    data: $('#form-product').serialize(),
+    dataType: 'json',
+    beforeSend: function() {
+      $('#button-cart').button('loading');
+    },
+    complete: function() {
+      $('#button-cart').button('reset');
+    },
+    success: function(json) {
+      $('#alert').find('.alert').remove();
+      $('#form-product').find('.is-invalid').removeClass('is-invalid');
+      $('#form-product').find('.invalid-feedback').remove();
+
+      if (json['error']) {
+        for (key in json['error']) {
+          var element = $('[name=\'' + key.replaceAll('_', '-') + '\']');
+          element.addClass('is-invalid');
+          element.after('<div class="invalid-feedback d-block">' + json['error'][key] + '</div>');
+        }
+      }
+
+      if (json['success']) {
+        $('#alert').prepend('<div class="alert alert-success alert-dismissible"><i class="fa-solid fa-circle-check"></i> ' + json['success'] + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+        $('#cart').load('index.php?route=common/cart.info&language={{ language }}');
+      }
+    }
+  });
+});
+
+// Buy Now - Direct to payment
+$('#button-buy-now').on('click', function(e) {
+  e.preventDefault();
+
+  // Validate form first
+  var formData = $('#form-product').serializeArray();
+  var hasError = false;
+
+  // Check required options
+  $('#form-product').find('[required]').each(function() {
+    if (!$(this).val()) {
+      hasError = true;
+      $(this).addClass('is-invalid');
+      if (!$(this).next('.invalid-feedback').length) {
+        $(this).after('<div class="invalid-feedback d-block">This field is required</div>');
+      }
+    }
+  });
+
+  if (hasError) {
+    $('#alert').prepend('<div class="alert alert-warning alert-dismissible"><i class="fa-solid fa-exclamation-triangle"></i> Please select all required options.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+    return;
+  }
+
+  // Submit to Buy Now controller
+  var form = $('<form>', {
+    'action': 'index.php?route=checkout/buy_now&language={{ language }}',
+    'method': 'post',
+    'style': 'display:none;'
+  });
+
+  // Add all form fields
+  $.each(formData, function(i, field) {
+    $('<input>').attr({
+      type: 'hidden',
+      name: field.name,
+      value: field.value
+    }).appendTo(form);
+  });
+
+  // Submit
+  form.appendTo('body').submit();
+});
+
+// Product Image Carousel - Pure jQuery Implementation
+$(document).ready(function() {
+  var $carousel = $('.product-carousel');
+  if ($carousel.length === 0) return;
+  
+  var $slides = $('.carousel-slide');
+  var $thumbs = $('.carousel-thumb');
+  var $dots = $('.carousel-dot');
+  var $prev = $('.carousel-prev');
+  var $next = $('.carousel-next');
+  
+  var currentIndex = 0;
+  var totalSlides = $slides.length;
+  var autoplayInterval;
+  var autoplayDelay = 3000; // 3 seconds
+  var isPaused = false;
+  
+  // Show slide
+  function showSlide(index, fade) {
+    if (index < 0) index = totalSlides - 1;
+    if (index >= totalSlides) index = 0;
+    
+    currentIndex = index;
+    
+    if (fade !== false) {
+      // Fade effect
+      $slides.removeClass('active').eq(index).addClass('active');
+    } else {
+      // Instant switch
+      $slides.removeClass('active');
+      $slides.eq(index).addClass('active');
+    }
+    
+    // Update thumbnails
+    $thumbs.removeClass('active').eq(index).addClass('active');
+    
+    // Update dots
+    $dots.removeClass('active').eq(index).addClass('active');
+  }
+  
+  // Next slide
+  function nextSlide() {
+    showSlide(currentIndex + 1);
+  }
+  
+  // Previous slide
+  function prevSlide() {
+    showSlide(currentIndex - 1);
+  }
+  
+  // Start autoplay
+  function startAutoplay() {
+    if (isPaused) return;
+    stopAutoplay();
+    autoplayInterval = setInterval(nextSlide, autoplayDelay);
+  }
+  
+  // Stop autoplay
+  function stopAutoplay() {
+    if (autoplayInterval) {
+      clearInterval(autoplayInterval);
+      autoplayInterval = null;
+    }
+  }
+  
+  // Pause autoplay
+  function pauseAutoplay() {
+    isPaused = true;
+    stopAutoplay();
+  }
+  
+  // Resume autoplay
+  function resumeAutoplay() {
+    isPaused = false;
+    startAutoplay();
+  }
+  
+  // Navigation buttons
+  $prev.on('click', function() {
+    prevSlide();
+    stopAutoplay();
+    setTimeout(startAutoplay, 1000);
+  });
+  
+  $next.on('click', function() {
+    nextSlide();
+    stopAutoplay();
+    setTimeout(startAutoplay, 1000);
+  });
+  
+  // Thumbnail click
+  $thumbs.on('click', function() {
+    var index = $(this).data('index');
+    showSlide(index);
+    stopAutoplay();
+    setTimeout(startAutoplay, 1000);
+  });
+  
+  // Dot click
+  $dots.on('click', function() {
+    var index = $(this).data('index');
+    showSlide(index);
+    stopAutoplay();
+    setTimeout(startAutoplay, 1000);
+  });
+  
+  // Pause on hover
+  $carousel.on('mouseenter', pauseAutoplay);
+  $carousel.on('mouseleave', resumeAutoplay);
+  
+  // Magnific popup integration
+  $('.magnific-popup').magnificPopup({
+    type: 'image',
+    gallery: {
+      enabled: true
+    },
+    callbacks: {
+      open: function() {
+        pauseAutoplay();
+      },
+      close: function() {
+        resumeAutoplay();
+      }
+    }
+  });
+  
+  // Start autoplay
+  startAutoplay();
+  
+  console.log('Product carousel initialized: ' + totalSlides + ' slides');
+});
+
+//--></script>
+
+<style>
+/* Product Carousel Styles - Override old jd-gallery styles */
+.product-carousel-wrapper {
+  width: 100%;
+  display: block !important;
+  flex-direction: initial !important;
+}
+
+.product-carousel {
+  width: 100%;
+}
+
+.carousel-main {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  background: #f8f9fa;
+}
+
+.carousel-slides {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.carousel-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  padding: 20px;
+}
+
+.carousel-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.carousel-slide img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.carousel-video {
+  width: 100%;
+  height: 400px;
+  object-fit: contain;
+}
+
+/* Navigation Buttons */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+.carousel-btn:hover {
+  background: #2563eb;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-btn i {
+  font-size: 20px;
+  color: #2563eb;
+  transition: color 0.3s ease;
+}
+
+.carousel-btn:hover i {
+  color: #fff;
+}
+
+.carousel-prev {
+  left: 15px;
+}
+
+.carousel-next {
+  right: 15px;
+}
+
+/* Pagination Dots */
+.carousel-pagination {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.carousel-dot:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.2);
+}
+
+.carousel-dot.active {
+  width: 24px;
+  border-radius: 5px;
+  background: #2563eb;
+}
+
+/* Thumbnail Gallery */
+.carousel-thumbs {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 10px 0;
+  overflow-x: auto;
+}
+
+.carousel-thumb {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.5;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.carousel-thumb:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.carousel-thumb.active {
+  opacity: 1;
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.carousel-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Loading Animation */
+.carousel-slide.active img {
+  animation: carouselFadeIn 0.8s ease-in;
+}
+
+@keyframes carouselFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .carousel-slides {
+    height: 350px;
+  }
+  
+  .carousel-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .carousel-btn i {
+    font-size: 16px;
+  }
+  
+  .carousel-prev {
+    left: 10px;
+  }
+  
+  .carousel-next {
+    right: 10px;
+  }
+  
+  .carousel-thumb {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .carousel-video {
+    height: 300px;
+  }
+}
+</style>
+
+{{ footer }}

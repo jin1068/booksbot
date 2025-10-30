@@ -1,0 +1,71 @@
+{{ header }}{{ column_left }}
+<div id="duobao-history" class="container">
+  <ul class="breadcrumb">
+    {% for breadcrumb in breadcrumbs %}
+      <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+    {% endfor %}
+  </ul>
+
+  <h1 class="mb-4">{{ heading_title }}</h1>
+
+  {% if draws %}
+    <div class="table-responsive mb-4">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>{{ column_title }}</th>
+            <th>{{ column_issue }}</th>
+            <th>{{ column_winner }}</th>
+            <th>{{ column_ticket }}</th>
+            <th>{{ column_total }}</th>
+            <th>{{ column_progress }}</th>
+            <th>{{ column_draw_time }}</th>
+            <th>{{ column_status }}</th>
+            <th class="text-end"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for draw in draws %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ draw.title }}</div>
+                {% if draw.sub_title %}<div class="text-muted small">{{ draw.sub_title }}</div>{% endif %}
+              </td>
+              <td>#{{ draw.issue_no }}</td>
+              <td>{{ draw.winner }}</td>
+              <td>{{ draw.winner_ticket ?: '-' }}</td>
+              <td>{{ draw.joined_slots }}/{{ draw.total_slots }}</td>
+              <td style="min-width:160px;">
+                <div class="progress" style="height:6px;">
+                  <div class="progress-bar bg-success" style="width: {{ draw.progress }}%;" aria-valuenow="{{ draw.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="small text-secondary mt-1">{{ draw.progress }}%</div>
+              </td>
+              <td>
+                {% if draw.draw_time %}
+                  <div>{{ draw.draw_time }}</div>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td>{{ draw.status }}</td>
+              <td class="text-end"><a href="{{ draw.href }}" class="btn btn-sm btn-outline-primary">{{ button_view }}</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="row align-items-center mb-4">
+      <div class="col-md-6 text-start">{{ pagination }}</div>
+      <div class="col-md-6 text-md-end">{{ results }}</div>
+    </div>
+  {% else %}
+    <div class="alert alert-info">{{ text_no_results }}</div>
+  {% endif %}
+
+  <div class="mb-5">
+    <a href="{{ continue }}" class="btn btn-secondary">{{ button_continue }}</a>
+  </div>
+</div>
+{{ column_right }}{{ footer }}

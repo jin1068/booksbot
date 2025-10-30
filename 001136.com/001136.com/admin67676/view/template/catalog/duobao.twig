@@ -1,0 +1,82 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button id="filter-duobao-button" type="button" data-bs-toggle="tooltip" title="{{ button_filter }}" onclick="$('#filter-duobao').toggleClass('d-none');" class="btn btn-light d-lg-none"><i class="fa-solid fa-filter"></i></button>
+        <a href="{{ add }}" data-bs-toggle="tooltip" title="{{ button_add }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i></a>
+        <button type="submit" form="form-duobao" formaction="{{ delete }}" data-bs-toggle="tooltip" title="{{ button_delete }}" onclick="return confirm('{{ text_confirm }}');" class="btn btn-danger"><i class="fa-regular fa-trash-can"></i></button>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div id="filter-duobao" class="col-lg-3 col-md-12 order-lg-last d-none d-lg-block mb-3">
+        <div class="card">
+          <div class="card-header"><i class="fa-solid fa-filter"></i> {{ text_filter }}</div>
+          <div class="card-body">
+            <form id="form-filter">
+              <div class="mb-3">
+                <label for="input-title" class="form-label">{{ entry_title }}</label>
+                <input type="text" name="filter_title" value="{{ filter_title }}" placeholder="{{ entry_title }}" id="input-title" class="form-control"/>
+              </div>
+              <div class="mb-3">
+                <label for="input-status" class="form-label">{{ entry_status }}</label>
+                <select name="filter_status" id="input-status" class="form-select">
+                  <option value=""></option>
+                  <option value="draft"{% if filter_status == 'draft' %} selected{% endif %}>{{ text_status_draft }}</option>
+                  <option value="active"{% if filter_status == 'active' %} selected{% endif %}>{{ text_status_active }}</option>
+                  <option value="suspended"{% if filter_status == 'suspended' %} selected{% endif %}>{{ text_status_suspended }}</option>
+                  <option value="completed"{% if filter_status == 'completed' %} selected{% endif %}>{{ text_status_completed }}</option>
+                  <option value="cancelled"{% if filter_status == 'cancelled' %} selected{% endif %}>{{ text_status_cancelled }}</option>
+                </select>
+              </div>
+              <div class="text-end">
+                <button type="button" id="button-filter" class="btn btn-light"><i class="fa-solid fa-filter"></i> {{ button_filter }}</button>
+                <button type="reset" data-bs-toggle="tooltip" title="{{ button_reset }}" class="btn btn-outline-secondary"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col col-lg-9 col-md-12">
+        <div class="card">
+          <div class="card-header"><i class="fa-solid fa-list"></i> {{ text_list }}</div>
+          <div id="duobao" class="card-body">{{ list }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript"><!--
+$('#duobao').on('click', 'thead a, .pagination a', function(e) {
+    e.preventDefault();
+
+    $('#duobao').load(this.href);
+});
+
+$('#button-filter').on('click', function() {
+    var url = '';
+
+    var filter_title = $('#input-title').val();
+    if (filter_title !== '') {
+        url += '&filter_title=' + encodeURIComponent(filter_title);
+    }
+
+    var filter_status = $('#input-status').val();
+    if (filter_status !== '') {
+        url += '&filter_status=' + filter_status;
+    }
+
+    window.history.pushState({}, null, 'index.php?route=catalog/duobao&user_token={{ user_token }}' + url);
+
+    $('#duobao').load('index.php?route=catalog/duobao.list&user_token={{ user_token }}' + url);
+});
+//--></script>
+{{ footer }}

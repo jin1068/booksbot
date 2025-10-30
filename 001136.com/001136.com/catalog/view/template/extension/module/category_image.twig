@@ -1,0 +1,216 @@
+<section class="category-image-module">
+  {% if show_title %}
+  <div class="container">
+    <h2 class="module-title">{{ heading_title }}</h2>
+  </div>
+  {% endif %}
+  
+  <div class="container">
+    <div class="category-image-grid">
+      {% for category in categories %}
+      <div class="category-image-item">
+        <a href="{{ category.href }}" class="category-image-link" title="{{ category.name }}">
+          {# Category name on top #}
+          <h3 class="category-name-top">{{ category.name }}</h3>
+          
+          {# Image in the middle #}
+          <div class="category-image-wrapper">
+            <img src="{{ category.image }}" alt="{{ category.name }}" class="category-image-img" loading="lazy"/>
+          </div>
+          
+          {# Description at the bottom #}
+          {% if category.description %}
+          <p class="category-description-bottom">{{ category.description }}</p>
+          {% endif %}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<style>
+/* ===== 分类图片模块样式 ===== */
+.category-image-module {
+  padding: 40px 0;
+  background: #f8f9fa;
+}
+
+.category-image-module .module-title {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+}
+
+.category-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 0;
+}
+
+/* Mobile layout: 2 columns */
+@media (max-width: 768px) {
+  .category-image-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+}
+
+/* ✨ 手机端样式 - 图片最大400x400 */
+@media screen and (max-width: 480px) {
+  .category-image-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  .category-image-module {
+    padding: 20px 0 !important;
+  }
+  
+  /* 添加调试背景色验证CSS生效 */
+  .category-image-module {
+    background: #fffacd !important; /* 淡黄色背景，方便识别CSS是否加载 */
+  }
+}
+
+.category-image-item {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.category-image-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.category-image-link {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+}
+
+/* Category name on top */
+.category-name-top {
+  padding: 12px 10px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  background: #fff;
+  border-bottom: 1px solid #e9ecef;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .category-name-top {
+    font-size: 14px;
+    padding: 10px 8px;
+    min-height: 42px;
+  }
+}
+
+/* Image wrapper - Square 1:1 ratio */
+.category-image-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%; /* 1:1 ratio */
+  overflow: hidden;
+  background: #f8f9fa;
+}
+
+/* ✨✨✨ 手机端图片尺寸限制为400x400 ✨✨✨ */
+@media screen and (max-width: 480px) {
+  /* 使用多级选择器提高优先级 */
+  .category-image-module .category-image-grid .category-image-item .category-image-link .category-image-wrapper {
+    max-width: 400px !important;
+    max-height: 400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    padding-bottom: 100% !important;
+    /* 添加调试边框 */
+    border: 3px solid red !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* 确保父容器也居中 */
+  .category-image-module .category-image-grid .category-image-item {
+    display: flex !important;
+    justify-content: center !important;
+  }
+  
+  .category-image-module .category-image-grid .category-image-item .category-image-link {
+    width: 100% !important;
+    max-width: 400px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+.category-image-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.category-image-item:hover .category-image-img {
+  transform: scale(1.05);
+}
+
+/* Description at the bottom */
+.category-description-bottom {
+  padding: 12px 10px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #666;
+  text-align: center;
+  background: #fff;
+  border-top: 1px solid #e9ecef;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .category-description-bottom {
+    font-size: 12px;
+    padding: 10px 8px;
+    min-height: 50px;
+    line-height: 1.4;
+  }
+}
+
+/* Image dimensions info */
+/*
+手机端图片尺寸 (移动设备):
+- 2列布局
+- 每个图片容器最大尺寸: 400x400 (正方形 1:1)
+- 图片实际显示: 会根据屏幕自适应，但不超过400x400
+- 推荐上传图片: 800x800 (2倍清晰度，适配高分辨率屏幕)
+
+桌面端图片尺寸 (PC):
+- 4-6列自适应布局，每列最小200px
+- 图片显示尺寸: 200-300px (取决于屏幕宽度)
+- 推荐上传图片: 600x600 或 800x800
+- PC端和分类左右图片保持一致的布局
+*/
+</style>

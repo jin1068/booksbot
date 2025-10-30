@@ -1,0 +1,65 @@
+{% set languages = [
+  {
+    'code': 'zh-cn',
+    'label': 'Chinese',
+    'active': current_language|slice(0, 2) == 'zh'
+  },
+  {
+    'code': 'en-gb',
+    'label': 'English',
+    'active': current_language|slice(0, 2) == 'en'
+  }
+] %}
+{% set any_active = false %}
+{% for lang in languages %}
+  {% if lang.active %}
+    {% set any_active = true %}
+  {% endif %}
+{% endfor %}
+{% if not any_active %}
+  {% set languages = [
+    languages[0] | merge({'active': true}),
+    languages[1] | merge({'active': false})
+  ] %}
+{% endif %}
+
+{% set dom_id = 'spec-' ~ spec.slug %}
+
+<div class="spec-dataset" id="{{ dom_id }}">
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    {% for lang in languages %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {% if lang.active %}active{% endif %}" id="{{ dom_id }}-tab-{{ lang.code }}" data-bs-toggle="tab" data-bs-target="#{{ dom_id }}-pane-{{ lang.code }}" type="button" role="tab" aria-controls="{{ dom_id }}-pane-{{ lang.code }}" aria-selected="{{ lang.active ? 'true' : 'false' }}">
+          {{ lang.label }}
+        </button>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="tab-content border border-top-0 rounded-bottom">
+    {% for lang in languages %}
+      <div class="tab-pane fade {% if lang.active %}show active{% endif %} p-3" id="{{ dom_id }}-pane-{{ lang.code }}" role="tabpanel" aria-labelledby="{{ dom_id }}-tab-{{ lang.code }}">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped align-middle spec-table">
+            <thead class="table-light">
+              <tr>
+                {% for heading in spec.columns[lang.code] %}
+                  <th scope="col">{{ heading }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in spec.rows %}
+                <tr>
+                  {% for cell in row[lang.code] %}
+                    <td>{{ cell }}</td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>

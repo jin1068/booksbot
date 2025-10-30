@@ -1,0 +1,87 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end"></div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-3 col-md-12 order-lg-last mb-3">
+        <div class="card">
+          <div class="card-header"><i class="fa-solid fa-filter"></i> {{ text_filter }}</div>
+          <div class="card-body">
+            <form id="form-filter">
+              <div class="mb-3">
+                <label for="input-title" class="form-label">{{ entry_title }}</label>
+                <input type="text" name="filter_title" value="{{ filter_title }}" id="input-title" class="form-control" placeholder="{{ entry_title }}"/>
+              </div>
+              <div class="mb-3">
+                <label for="input-issue-no" class="form-label">{{ entry_issue_no }}</label>
+                <input type="number" name="filter_issue_no" value="{{ filter_issue_no }}" id="input-issue-no" class="form-control"/>
+              </div>
+              <div class="mb-3">
+                <label for="input-ticket" class="form-label">{{ entry_ticket }}</label>
+                <input type="text" name="filter_ticket" value="{{ filter_ticket }}" id="input-ticket" class="form-control"/>
+              </div>
+              <div class="mb-3">
+                <label for="input-customer" class="form-label">{{ entry_customer }}</label>
+                <input type="text" name="filter_customer" value="{{ filter_customer }}" id="input-customer" class="form-control"/>
+              </div>
+              <div class="text-end">
+                <button type="button" id="button-filter" class="btn btn-light"><i class="fa-solid fa-filter"></i> {{ button_filter }}</button>
+                <button type="reset" data-bs-toggle="tooltip" title="{{ button_reset }}" class="btn btn-outline-secondary"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-9 col-md-12">
+        <div class="card">
+          <div class="card-header"><i class="fa-solid fa-list"></i> {{ text_list }}</div>
+          <div id="ticket-list" class="card-body">{{ list }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript"><!--
+$('#ticket-list').on('click', 'thead a, .pagination a', function(e) {
+  e.preventDefault();
+  $('#ticket-list').load(this.href);
+});
+
+$('#button-filter').on('click', function() {
+  var url = '';
+
+  var filter_title = $('#input-title').val();
+  if (filter_title) {
+    url += '&filter_title=' + encodeURIComponent(filter_title);
+  }
+
+  var filter_issue_no = $('#input-issue-no').val();
+  if (filter_issue_no) {
+    url += '&filter_issue_no=' + filter_issue_no;
+  }
+
+  var filter_ticket = $('#input-ticket').val();
+  if (filter_ticket) {
+    url += '&filter_ticket=' + encodeURIComponent(filter_ticket);
+  }
+
+  var filter_customer = $('#input-customer').val();
+  if (filter_customer) {
+    url += '&filter_customer=' + encodeURIComponent(filter_customer);
+  }
+
+  window.history.pushState({}, null, 'index.php?route=catalog/duobao_ticket&user_token={{ user_token }}' + url);
+  $('#ticket-list').load('index.php?route=catalog/duobao_ticket.list&user_token={{ user_token }}' + url);
+});
+//--></script>
+{{ footer }}

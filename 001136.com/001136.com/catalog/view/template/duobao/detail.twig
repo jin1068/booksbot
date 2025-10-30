@@ -1,0 +1,307 @@
+{{ header }}{{ column_left }}
+<div id="duobao-detail" class="container">
+  <ul class="breadcrumb">
+    {% for breadcrumb in breadcrumbs %}
+      <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+    {% endfor %}
+  </ul>
+  <div class="row">
+    <div id="content" class="col">
+      <div class="duobao-hero card mb-4">
+        <div class="row g-0">
+          {% if product_thumb %}
+            <div class="col-md-5">
+              <div class="p-3">
+                <img src="{{ product_thumb }}" alt="{{ heading_title }}" class="img-fluid rounded shadow-sm w-100"/>
+              </div>
+            </div>
+          {% endif %}
+          <div class="col-md-7">
+            <div class="card-body">
+              <h1 class="card-title">{{ heading_title }}</h1>
+              {% if sub_title %}
+                <p class="text-muted lead">{{ sub_title }}</p>
+              {% endif %}
+              <div class="row gy-3">
+                <div class="col-sm-6">
+                  <div class="text-secondary small">{{ text_status }}</div>
+                  <div class="badge bg-primary fs-6" id="duobao-status">{{ status }}</div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="text-secondary small">{{ text_issue_no }}</div>
+                  <div class="fw-semibold fs-5">#{{ issue_no }}</div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="text-secondary small">{{ text_per_price }}</div>
+                  <div class="fw-semibold fs-5 text-danger">{{ per_price }}</div>
+                </div>
+                <div class="col-12">
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ text_joined_slots }}: <span id="duobao-joined">{{ joined_slots }}</span></span>
+                    <span>{{ text_remaining_slots }}: <span id="duobao-remaining">{{ remaining }}</span></span>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-primary" id="duobao-progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                  <div class="text-end small text-secondary mt-1" id="duobao-progress-text">{{ text_progress }} {{ progress }}%</div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="text-secondary small">{{ text_total_slots }}</div>
+                  <div class="fw-semibold">{{ total_slots }}</div>
+                </div>
+                {% if start_time %}
+                  <div class="col-sm-6">
+                    <div class="text-secondary small">{{ text_start_time }}</div>
+                    <div class="fw-semibold">{{ start_time }}</div>
+                  </div>
+                {% endif %}
+                {% if end_time %}
+                  <div class="col-sm-6">
+                    <div class="text-secondary small">{{ text_end_time }}</div>
+                    <div class="fw-semibold">{{ end_time }}</div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if is_logged %}
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title mb-0">{{ button_join }}</h3>
+            <div class="text-muted small">{{ text_balance }}: <span id="duobao-balance">{{ customer_balance }}</span></div>
+          </div>
+          <div class="card-body">
+            <form id="duobao-join-form" class="row g-3 align-items-end">
+              <div class="col-sm-4 col-md-3">
+                <label class="form-label" for="input-quantity">{{ entry_quantity }}</label>
+                <input type="number" name="quantity" value="1" min="1" id="input-quantity" class="form-control"/>
+                <div class="invalid-feedback" id="error-quantity"></div>
+              </div>
+              <div class="col-sm-8 col-md-9 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">{{ button_join }}</button>
+              </div>
+              <div class="col-12" id="duobao-alert"></div>
+              <input type="hidden" name="duobao_id" value="{{ duobao_id }}"/>
+            </form>
+            <div class="mt-3" id="duobao-ticket-wrapper"{% if my_tickets %} style="display:block;"{% else %} style="display:none;"{% endif %}>
+              <h6>{{ text_my_tickets }}</h6>
+              <ul class="list-unstyled mb-0" id="duobao-ticket-list">
+                {% for ticket in my_tickets %}
+                  <li>{{ ticket.ticket_no }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-warning mb-4">
+          {{ text_login_notice }} <a href="{{ login_href }}" class="alert-link">{{ text_login }}</a>
+        </div>
+      {% endif %}
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h3 class="card-title mb-0">{{ text_summary }}</h3>
+        </div>
+        <div class="card-body">
+          {% if description %}
+            <div class="duobao-description">{{ description|raw }}</div>
+          {% else %}
+            <p class="text-muted">{{ text_no_description }}</p>
+          {% endif %}
+
+          {% if issue_notes %}
+            <div class="alert alert-info mt-3">
+              {{ issue_notes|raw }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if product_href %}
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title mb-0">{{ text_related_product }}</h3>
+            <a href="{{ product_href }}" class="btn btn-outline-primary btn-sm">{{ button_view_product }}</a>
+          </div>
+          <div class="card-body">
+            <div class="row align-items-center">
+              {% if product_thumb %}
+                <div class="col-md-3">
+                  <a href="{{ product_href }}"><img src="{{ product_thumb }}" alt="{{ heading_title }}" class="img-fluid rounded shadow-sm"/></a>
+                </div>
+              {% endif %}
+              <div class="col-md-9">
+                {% if product_price %}
+                  <div class="h5 text-danger">{{ product_price }}
+                    {% if product_special %}
+                      <span class="text-muted text-decoration-line-through fs-6 ms-2">{{ product_special }}</span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+                {% if rating is not null %}
+                  <div class="mb-2">
+                    <span class="rating">
+                      {% for i in 1..5 %}
+                        {% if rating < i %}
+                          <i class="fa-regular fa-star text-warning"></i>
+                        {% else %}
+                          <i class="fa-solid fa-star text-warning"></i>
+                        {% endif %}
+                      {% endfor %}
+                    </span>
+                  </div>
+                {% endif %}
+                <a href="{{ product_href }}" class="btn btn-primary">{{ button_view_product }}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h3 class="card-title mb-0">{{ text_suggestions }}</h3>
+        </div>
+        <div class="card-body">
+          {% if suggestions %}
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+              {% for suggestion in suggestions %}
+                <div class="col">
+                  <div class="border rounded h-100 p-3">
+                    <div class="ratio ratio-1x1 mb-3">
+                      <a href="{{ suggestion.href }}"><img src="{{ suggestion.thumb }}" alt="{{ suggestion.title }}" class="img-fluid rounded"/></a>
+                    </div>
+                    <h6 class="fw-semibold"><a href="{{ suggestion.href }}" class="text-decoration-none text-dark">{{ suggestion.title }}</a></h6>
+                    <div class="progress mb-2" style="height: 6px;">
+                      <div class="progress-bar bg-success" role="progressbar" style="width: {{ suggestion.progress }}%;" aria-valuenow="{{ suggestion.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <a href="{{ suggestion.href }}" class="btn btn-outline-primary btn-sm">{{ button_view_activity }}</a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">{{ text_no_suggestions }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="text-center mb-5 d-flex justify-content-center gap-3">
+        <a href="{{ history_href }}" class="btn btn-outline-secondary">{{ button_history }}</a>
+        <a href="{{ continue }}" class="btn btn-secondary">{{ button_continue }}</a>
+      </div>
+    </div>
+  </div>
+</div>
+{{ column_right }}{{ footer }}
+
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('duobao-join-form');
+  if (!form) {
+    return;
+  }
+
+  const alertBox = document.getElementById('duobao-alert');
+  const qtyInput = document.getElementById('input-quantity');
+  const qtyError = document.getElementById('error-quantity');
+  const balanceEl = document.getElementById('duobao-balance');
+  const joinedEl = document.getElementById('duobao-joined');
+  const remainingEl = document.getElementById('duobao-remaining');
+  const progressBar = document.getElementById('duobao-progress-bar');
+  const progressText = document.getElementById('duobao-progress-text');
+  const statusEl = document.getElementById('duobao-status');
+  const ticketWrapper = document.getElementById('duobao-ticket-wrapper');
+  const ticketList = document.getElementById('duobao-ticket-list');
+
+  const showAlert = (type, message) => {
+    if (!alertBox) return;
+    if (!type || !message) {
+      alertBox.innerHTML = '';
+      return;
+    }
+    alertBox.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible"><i class="fa-solid fa-circle-info"></i> ' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+  };
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    qtyError.textContent = '';
+    qtyInput.classList.remove('is-invalid');
+    showAlert('', '');
+
+    const formData = new FormData(form);
+
+    fetch('{{ join_action }}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
+    }).then(response => response.json()).then(json => {
+      if (json.error) {
+        if (json.error.redirect) {
+          window.location = json.error.redirect;
+          return;
+        }
+
+        if (json.error.quantity) {
+          qtyError.textContent = json.error.quantity;
+          qtyInput.classList.add('is-invalid');
+        }
+
+        if (json.error.warning) {
+          showAlert('danger', json.error.warning);
+        }
+      } else if (json.success) {
+        showAlert('success', json.success);
+
+        if (json.balance && balanceEl) {
+          balanceEl.textContent = json.balance;
+        }
+
+        if (joinedEl) {
+          joinedEl.textContent = json.joined_slots;
+        }
+
+        if (remainingEl) {
+          remainingEl.textContent = json.remaining;
+        }
+
+        if (progressBar) {
+          progressBar.style.width = json.progress + '%';
+          progressBar.setAttribute('aria-valuenow', json.progress);
+        }
+
+        if (progressText) {
+          progressText.textContent = '{{ text_progress }} ' + json.progress + '%';
+        }
+
+        if (statusEl && json.status) {
+          statusEl.textContent = json.status;
+        }
+
+        if (json.tickets && json.tickets.length) {
+          ticketWrapper.style.display = '';
+          const existing = new Set(Array.from(ticketList.children).map(function(li) { return li.textContent; }));
+          json.tickets.forEach(function(ticket) {
+            if (!existing.has(ticket)) {
+              const li = document.createElement('li');
+              li.textContent = ticket;
+              ticketList.appendChild(li);
+            }
+          });
+        }
+
+        qtyInput.value = 1;
+      }
+    }).catch(() => {
+      showAlert('danger', '{{ error_join|escape('js') }}');
+    });
+  });
+});
+</script>

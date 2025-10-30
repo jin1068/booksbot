@@ -1,0 +1,166 @@
+</main>
+<footer>
+  <div class="container">
+    <div class="row">
+      {% if informations or blog %}
+        <div class="col-sm-3">
+          <h5>{{ text_information }}</h5>
+          <ul class="list-unstyled">
+            {% if blog %}
+              <li><a href="{{ blog }}">{{ text_blog }}</a></li>
+            {% endif %}
+            {% for information in informations %}
+              <li><a href="{{ information.href }}">{{ information.title }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      <div class="col-sm-3">
+        <h5>{{ text_service }}</h5>
+        <ul class="list-unstyled">
+          <li><a href="{{ contact }}">{{ text_contact }}</a></li>
+          <li><a href="{{ return }}">{{ text_return }}</a></li>
+          {% if gdpr %}
+            <li><a href="{{ gdpr }}">{{ text_gdpr }}</a></li>
+          {% endif %}
+          <li><a href="{{ sitemap }}">{{ text_sitemap }}</a></li>
+        </ul>
+      </div>
+      <div class="col-sm-3">
+        <h5>{{ text_extra }}</h5>
+        <ul class="list-unstyled">
+          <li><a href="{{ manufacturer }}">{{ text_manufacturer }}</a></li>
+          {% if affiliate %}
+            <li><a href="{{ affiliate }}">{{ text_affiliate }}</a></li>
+          {% endif %}
+          <li><a href="{{ special }}">{{ text_special }}</a></li>
+        </ul>
+      </div>
+      <div class="col-sm-3">
+        <h5>{{ text_account }}</h5>
+        <ul class="list-unstyled">
+          <li><a href="{{ account }}">{{ text_account }}</a></li>
+          <li><a href="{{ order }}">{{ text_order }}</a></li>
+          <li><a href="{{ wishlist }}">{{ text_wishlist }}</a></li>
+          <li><a href="{{ newsletter }}">{{ text_newsletter }}</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr>
+    <p>{{ powered }}</p>
+    <!--
+OpenCart is open source software and you are free to remove the powered by OpenCart if you want, but its generally accepted practise to make a small donation.
+Please donate via PayPal to donate@opencart.com
+//-->
+  </div>
+</footer>
+</div>
+{{ cookie }}
+<script src="{{ bootstrap }}" type="text/javascript"></script>
+{% for script in scripts %}
+  <script src="{{ script.href }}" type="text/javascript"></script>
+{% endfor %}
+
+<button id="tawk-launcher" class="chat-launcher" type="button" data-loading="正在连接客服�? data-loaded="联系客服">
+  在线客服
+</button>
+
+<style>
+  .chat-launcher {
+    position: fixed;
+    right: 18px;
+    bottom: 22px;
+    z-index: 1050;
+    border: none;
+    border-radius: 999px;
+    padding: 0.65rem 1.4rem;
+    background: #217C9B;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 12px 24px rgba(33, 124, 155, 0.35);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  }
+  .chat-launcher:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(33, 124, 155, 0.45);
+  }
+  .chat-launcher.is-loading {
+    cursor: wait;
+    opacity: 0.75;
+  }
+  @media (max-width: 575.98px) {
+    .chat-launcher {
+      right: 12px;
+      bottom: 16px;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<script type="text/javascript">
+(function() {
+  var launcher = document.getElementById('tawk-launcher');
+  if (!launcher) {
+    return;
+  }
+
+  var loaded = false;
+  var defaultLabel = launcher.textContent;
+  var loadingLabel = launcher.getAttribute('data-loading') || defaultLabel;
+  var loadedLabel = launcher.getAttribute('data-loaded') || defaultLabel;
+
+  function setLabel(label) {
+    launcher.textContent = label;
+  }
+
+  function handleClick() {
+    if (loaded && window.Tawk_API && typeof window.Tawk_API.maximize === 'function') {
+      window.Tawk_API.maximize();
+      return;
+    }
+
+    if (loaded) {
+      return;
+    }
+
+    loaded = true;
+    launcher.classList.add('is-loading');
+    setLabel(loadingLabel);
+
+    window.Tawk_API = window.Tawk_API || {};
+    window.Tawk_API.onLoad = function() {
+      launcher.classList.remove('is-loading');
+      launcher.classList.add('is-loaded');
+      setLabel(loadedLabel);
+      if (typeof window.Tawk_API.maximize === 'function') {
+        window.Tawk_API.maximize();
+      }
+    };
+    window.Tawk_API.onChatMinimized = function() {
+      setLabel(loadedLabel);
+    };
+
+    var script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://embed.tawk.to/68feed3053271d1951463048/1j8hst22e';
+    script.charset = 'UTF-8';
+    script.setAttribute('crossorigin', '*');
+    script.onload = function() {
+      launcher.classList.remove('is-loading');
+    };
+    script.onerror = function() {
+      launcher.classList.remove('is-loading');
+      loaded = false;
+      setLabel('客服连接失败');
+    };
+
+    var firstScript = document.getElementsByTagName('script')[0];
+    firstScript.parentNode.insertBefore(script, firstScript);
+  }
+
+  launcher.addEventListener('click', handleClick);
+})();
+</script>
+</body></html>

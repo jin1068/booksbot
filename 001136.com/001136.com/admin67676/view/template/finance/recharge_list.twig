@@ -1,0 +1,130 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-list"></i> {{ text_list }}</div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead>
+              <tr>
+                <th>{{ column_customer }}</th>
+                <th>{{ column_network }}</th>
+                <th class="text-end">{{ column_amount }}</th>
+                <th>{{ column_txhash }}</th>
+                <th>{{ column_receipt }}</th>
+                <th>{{ column_status }}</th>
+                <th>{{ column_date_added }}</th>
+                <th class="text-end">{{ column_action }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if recharges %}
+                {% for recharge in recharges %}
+                  <tr>
+                    <td>
+                      <div>{{ recharge.customer }}</div>
+                      {% if recharge.email %}
+                        <div class="text-muted small">{{ recharge.email }}</div>
+                      {% endif %}
+                    </td>
+                    <td>{{ recharge.network }}</td>
+                    <td class="text-end">{{ recharge.amount }}</td>
+                    <td>{{ recharge.txhash }}</td>
+                    <td>
+                      {% if recharge.receipt_url %}
+                        <a href="{{ recharge.receipt_url }}" target="_blank" class="btn btn-link btn-sm p-0">{{ text_view_receipt }}</a>
+                      {% elseif recharge.receipt_raw %}
+                        <span class="text-muted">{{ recharge.receipt_raw }}</span>
+                      {% else %}
+                        <span class="text-muted">{{ text_no_receipt }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ recharge.status }}</td>
+                    <td>{{ recharge.date_added }}</td>
+                    <td class="text-end">
+                      {% if recharge.status_code == 0 %}
+                        <button type="button" class="btn btn-success btn-sm" data-action="approve" data-id="{{ recharge.recharge_id }}"><i class="fa-solid fa-check"></i> {{ button_approve }}</button>
+                        <button type="button" class="btn btn-danger btn-sm" data-action="reject" data-id="{{ recharge.recharge_id }}"><i class="fa-solid fa-xmark"></i> {{ button_reject }}</button>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ text_processed }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td class="text-center" colspan="8">{{ text_no_results }}</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        <div class="row">
+          <div class="col-sm-6 text-start">{{ pagination }}</div>
+          <div class="col-sm-6 text-end">{{ results }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript"><!--
+var approveUrlBase = '{{ approve|replace({'&amp;': '&'}) }}';
+var rejectUrlBase = '{{ reject|replace({'&amp;': '&'}) }}';
+
+document.querySelectorAll('[data-action]').forEach(function (button) {
+  button.addEventListener('click', function () {
+    var action = this.getAttribute('data-action');
+    var id = this.getAttribute('data-id');
+
+    if (!id || !action) {
+      return;
+    }
+
+    var url = '';
+
+    if (action === 'approve') {
+      url = approveUrlBase + '&recharge_id=' + id;
+    } else if (action === 'reject') {
+      url = rejectUrlBase + '&recharge_id=' + id;
+    } else {
+      return;
+    }
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    }).then(function (response) {
+      return response.json();
+    }).then(function (json) {
+      document.querySelectorAll('#content .alert').forEach(function (alert) {
+        alert.remove();
+      });
+
+      if (json.success) {
+        location.reload();
+      }
+
+      if (json.error) {
+        var alert = document.createElement('div');
+        alert.className = 'alert alert-danger alert-dismissible';
+        alert.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + json.error + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        document.querySelector('#content .card-body').prepend(alert);
+      }
+    }).catch(function () {});
+  });
+});
+//--></script>
+{{ footer }}

@@ -1,0 +1,197 @@
+﻿{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end btn-group">
+        <form action="{{ action }}" method="post">
+          <input type="hidden" name="user_token" value="{{ user_token }}"/>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload"></i> {{ button_import }}</button>
+        </form>
+        <button type="button" class="btn btn-outline-secondary" id="button-preview"><i class="fa-solid fa-magnifying-glass"></i> {{ button_preview }}</button>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+      <div class="alert alert-danger"><i class="fa-solid fa-circle-exclamation"></i> {{ error_warning }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ success }}</div>
+    {% endif %}
+    <div class="row">
+      <div class="col-lg-7">
+        <div class="card shadow-sm mb-4">
+          <div class="card-header fw-semibold"><i class="fa-solid fa-circle-info"></i> {{ text_notes }}</div>
+          <div class="card-body">
+            <p class="mb-3">{{ text_description|raw }}</p>
+            <div class="small text-muted" style="line-height:1.6">{{ text_notes_list|raw }}</div>
+            <hr/>
+            <form action="{{ action }}" method="post" class="mt-3">
+              <input type="hidden" name="user_token" value="{{ user_token }}"/>
+              <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-database"></i> {{ button_import }}</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card shadow-sm">
+          <div class="card-header fw-semibold"><i class="fa-solid fa-chart-column"></i> {{ text_stats }}</div>
+          <div class="card-body">
+            {% if stats %}
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item">{{ text_stats_detail|format(stats.products_created, stats.products_skipped) }}</li>
+                {% if stats.warnings %}
+                  <li class="list-group-item text-warning small">
+                    <strong>{{ text_recent_warnings }}</strong>
+                    <ul class="mb-0 ps-3">
+                      {% for warning in stats.warnings|slice(0,5) %}
+                        <li>{{ warning }}</li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endif %}
+                {% if stats.formatted_time %}
+                  <li class="list-group-item text-muted small">{{ text_last_run|format(stats.formatted_time) }}</li>
+                {% endif %}
+              </ul>
+            {% else %}
+              <p class="text-muted mb-0">{{ text_no_history }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-spec-preview" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ text_preview_title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="preview-loading" class="text-center py-5"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
+        <div id="preview-error" class="alert alert-danger d-none"></div>
+        <div id="preview-result" class="d-none">
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="fw-semibold">{{ text_preview_created }}</h6>
+              <ul class="list-group small" id="preview-created-list"></ul>
+            </div>
+            <div class="col-md-6">
+              <h6 class="fw-semibold">{{ text_preview_skipped }}</h6>
+              <ul class="list-group small" id="preview-skipped-list"></ul>
+            </div>
+          </div>
+          <div class="mt-3" id="preview-warnings"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="me-auto text-muted small" id="preview-summary"></span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ button_close }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+(function() {
+  const previewBtn = document.getElementById('button-preview');
+  const modalEl = document.getElementById('modal-spec-preview');
+  if (!previewBtn || !modalEl) {
+    return;
+  }
+
+  const modal = new bootstrap.Modal(modalEl);
+  const spinner = document.getElementById('preview-loading');
+  const errorBox = document.getElementById('preview-error');
+  const resultBox = document.getElementById('preview-result');
+  const summary = document.getElementById('preview-summary');
+  const createdList = document.getElementById('preview-created-list');
+  const skippedList = document.getElementById('preview-skipped-list');
+  const warningsBox = document.getElementById('preview-warnings');
+
+  previewBtn.addEventListener('click', function() {
+    summary.textContent = '';
+    createdList.innerHTML = '';
+    skippedList.innerHTML = '';
+    warningsBox.innerHTML = '';
+    errorBox.classList.add('d-none');
+    resultBox.classList.add('d-none');
+    spinner.classList.remove('d-none');
+
+    modal.show();
+
+    fetch('index.php?route=catalog/spec_import.preview&user_token={{ user_token }}')
+      .then(response => response.json())
+      .then(json => {
+        spinner.classList.add('d-none');
+
+        if (json.error) {
+          errorBox.textContent = json.error;
+          errorBox.classList.remove('d-none');
+          return;
+        }
+
+        const data = json.data || {};
+        const created = data.products_created || 0;
+        const skipped = data.products_skipped || 0;
+        const createdItems = data.created_list || [];
+        const skippedItems = data.skipped || [];
+
+        summary.textContent = "{{ text_stats_detail|format('%s','%s') }}".replace('%s', created).replace('%s', skipped);
+
+        if (createdItems.length) {
+          createdItems.forEach(name => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item list-group-item-action';
+            li.textContent = name;
+            createdList.appendChild(li);
+          });
+        } else {
+          createdList.innerHTML = '<li class="list-group-item text-muted">{{ text_preview_empty }}</li>';
+        }
+
+        if (skippedItems.length) {
+          skippedItems.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item list-group-item-warning';
+            li.innerHTML = '<strong>' + (item.name || '-') + '</strong><br/><span class="small">' + (item.reason || '') + '</span>';
+            skippedList.appendChild(li);
+          });
+        } else {
+          skippedList.innerHTML = '<li class="list-group-item text-muted">{{ text_preview_empty }}</li>';
+        }
+
+        if ((data.warnings || []).length) {
+          const alert = document.createElement('div');
+          alert.className = 'alert alert-warning';
+          alert.innerHTML = '<strong>{{ text_preview_warnings }}</strong><ul class="mb-0 ps-3"></ul>';
+          const list = alert.querySelector('ul');
+          data.warnings.forEach(msg => {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            list.appendChild(li);
+          });
+          warningsBox.appendChild(alert);
+        }
+
+        resultBox.classList.remove('d-none');
+      })
+      .catch(() => {
+        spinner.classList.add('d-none');
+        errorBox.textContent = '{{ text_preview_error }}';
+        errorBox.classList.remove('d-none');
+      });
+  });
+})();
+</script>
+{{ footer }}

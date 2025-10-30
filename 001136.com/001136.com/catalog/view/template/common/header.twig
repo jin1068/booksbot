@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html dir="{{ direction }}" lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{{ title }}</title>
+  <base href="{{ base }}"/>
+  <script>
+    // 最早时机防止滚动 - 在所有其他脚本之前执行
+    (function() {
+      var preventScroll = function() {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      };
+      
+      // 如果URL有hash，立即移除并防止滚动
+      if (window.location.hash) {
+        preventScroll();
+        // 移除hash
+        if (window.history && window.history.replaceState) {
+          var cleanUrl = window.location.pathname + window.location.search;
+          window.history.replaceState(null, null, cleanUrl);
+        }
+        // 持续防止滚动
+        var preventCount = 0;
+        var preventInterval = setInterval(function() {
+          preventScroll();
+          preventCount++;
+          if (preventCount > 20) {
+            clearInterval(preventInterval);
+          }
+        }, 10);
+      }
+    })();
+  </script>
+  {% if description %}
+    <meta name="description" content="{{ description }}"/>
+  {% endif %}
+  {% if keywords %}
+    <meta name="keywords" content="{{ keywords }}"/>
+  {% endif %}
+  <script src="{{ jquery }}" type="text/javascript"></script>
+  <link href="{{ bootstrap }}" type="text/css" rel="stylesheet" media="screen"/>
+  <link href="{{ icons }}" rel="stylesheet" type="text/css"/>
+  <link href="{{ stylesheet }}" type="text/css" rel="stylesheet"/>
+  <script src="catalog/view/javascript/common.js" type="text/javascript"></script>
+  <script>
+    // 防止页面加载时自动滚动到hash位置
+    if (window.location.hash) {
+      // 立即滚动到顶部
+      window.scrollTo(0, 0);
+      // 移除hash但不刷新页面
+      if (history.replaceState) {
+        history.replaceState(null, null, window.location.pathname + window.location.search);
+      }
+    }
+  </script>
+  {% if icon %}
+    <link rel="icon" href="{{ icon }}" type="image/png">
+  {% endif %}
+  {% for style in styles %}
+    <link href="{{ style.href }}" type="text/css" rel="{{ style.rel }}" media="{{ style.media }}"/>
+  {% endfor %}
+  {% for script in scripts %}
+    <script src="{{ script.href }}" type="text/javascript"></script>
+  {% endfor %}
+  {% for link in links %}
+    <link href="{{ link.href }}" rel="{{ link.rel }}"/>
+  {% endfor %}
+  {% for analytic in analytics %}
+    {{ analytic }}
+  {% endfor %}
+</head>
+<body class="route-{{ route|replace({'/':'-'}) }}">
+<script>
+  // 页面加载时立即执行，防止滚动
+  (function() {
+    if (window.location.hash) {
+      setTimeout(function() {
+        window.scrollTo(0, 0);
+      }, 1);
+    }
+    // 保存语言切换前的滚动位置
+    window.addEventListener('beforeunload', function() {
+      if (window.languageSwitching) {
+        sessionStorage.setItem('preventScroll', 'true');
+      }
+    });
+    // 如果是语言切换后加载，防止滚动
+    if (sessionStorage.getItem('preventScroll') === 'true') {
+      window.scrollTo(0, 0);
+      sessionStorage.removeItem('preventScroll');
+      if (window.location.hash) {
+        history.replaceState(null, null, window.location.pathname + window.location.search);
+      }
+    }
+  })();
+</script>
+<div id="container">
+  <div id="alert"></div>
+  <nav id="top">
+    <div class="container">
+      <div class="top-bar">
+        <div class="top-bar__brand">
+          {% if logo %}
+            <a href="{{ home }}"><img src="{{ logo }}" title="{{ name }}" alt="{{ name }}" class="top-bar__brand-image"/></a>
+          {% else %}
+            <h1 class="top-bar__brand-text"><a href="{{ home }}">{{ name }}</a></h1>
+          {% endif %}
+        </div>
+        <div class="top-bar__nav">
+          <div class="top-bar__locale">
+            {% if currency %}
+              <div class="top-bar__currency">{{ currency }}</div>
+            {% endif %}
+            <div class="top-bar__language">{{ language }}</div>
+          </div>
+          <ul class="list-inline top-bar__links">
+            <li class="list-inline-item">
+              <a href="javascript:void(0);" onclick="if(typeof Tawk_API !== 'undefined' && Tawk_API.maximize) { Tawk_API.maximize(); } else { window.location.href='{{ contact }}'; }" class="top-bar__icon-link" title="{{ text_customer_service }}" aria-label="{{ text_customer_service }}">
+                <i class="fa-solid fa-headset"></i>
+                <span class="top-bar__link-label">{{ text_customer_service }}</span>
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <div class="dropdown">
+                <a href="#" class="dropdown-toggle top-bar__icon-link" data-bs-toggle="dropdown" aria-label="{{ text_account }}">
+                  <i class="fa-solid fa-user"></i>
+                  <span class="top-bar__link-label">{{ text_account }}</span>
+                  <i class="fa-solid fa-caret-down top-bar__caret"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-right">
+                  {% if not logged %}
+                    <li><a href="{{ register }}" class="dropdown-item">{{ text_register }}</a></li>
+                    <li><a href="{{ login }}" class="dropdown-item">{{ text_login }}</a></li>
+                  {% else %}
+                    <li><a href="{{ account }}" class="dropdown-item">{{ text_account }}</a></li>
+                    <li><a href="{{ order }}" class="dropdown-item">{{ text_order }}</a></li>
+                    <li><a href="{{ transaction }}" class="dropdown-item">{{ text_transaction }}</a></li>
+                    <li><a href="{{ download }}" class="dropdown-item">{{ text_download }}</a></li>
+                    <li><a href="{{ logout }}" class="dropdown-item">{{ text_logout }}</a></li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+            <li class="list-inline-item">
+              <a href="{{ wishlist }}" id="wishlist-total" title="{{ text_wishlist }}" aria-label="{{ text_wishlist }}" class="top-bar__icon-link">
+                <i class="fa-solid fa-heart"></i>
+                <span class="top-bar__link-label">{{ text_wishlist }}</span>
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="{{ shopping_cart }}" title="{{ text_shopping_cart }}" aria-label="{{ text_shopping_cart }}" class="top-bar__icon-link">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span class="top-bar__link-label">{{ text_shopping_cart }}</span>
+              </a>
+            </li>
+          </ul>
+          <div class="top-bar__search" data-search-container>
+            <button type="button" class="top-bar__search-toggle" aria-expanded="false" aria-controls="top-search-panel">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+            <div class="top-bar__search-panel" id="top-search-panel">
+              {{ search }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <script>
+    (() => {
+      const searchContainer = document.querySelector('[data-search-container]');
+      if (!searchContainer) {
+        return;
+      }
+
+      const toggle = searchContainer.querySelector('.top-bar__search-toggle');
+      const panel = searchContainer.querySelector('.top-bar__search-panel');
+      if (!toggle || !panel) {
+        return;
+      }
+
+      const input = panel.querySelector('input[name="search"]');
+
+      const closePanel = () => {
+        toggle.setAttribute('aria-expanded', 'false');
+        panel.classList.remove('is-open');
+      };
+
+      toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        if (expanded) {
+          closePanel();
+        } else {
+          toggle.setAttribute('aria-expanded', 'true');
+          panel.classList.add('is-open');
+          setTimeout(() => {
+            input?.focus();
+          }, 200);
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!panel.classList.contains('is-open')) {
+          return;
+        }
+
+        if (!searchContainer.contains(event.target)) {
+          closePanel();
+        }
+      });
+
+      // Close search panel on escape key
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && panel.classList.contains('is-open')) {
+          closePanel();
+        }
+      });
+    })();
+  </script>
+  <main>
+    {{ menu }}

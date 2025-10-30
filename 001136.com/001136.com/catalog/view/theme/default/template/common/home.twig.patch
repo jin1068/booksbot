@@ -1,0 +1,16 @@
+This patch shows how to modify `home.twig` to remove fixed heights from the
+slideshow, adjust navigation spacing and add a class for the mobile
+categories button. Apply these changes manually to your theme file.
+
+    *** Begin Patch
+    *** Update File: catalog/view/theme/default/template/common/home.twig
+    @@
+    -<div id="slideshow" class="swiper-container" style="min-height: 580px;">
+    +<div id="slideshow" class="swiper-container">
+    @@
+    -<nav id="menu" class="navbar navbar-expand-lg navbar-light bg-light mt-3">
+    +<nav id="menu" class="navbar navbar-expand-lg navbar-light bg-light">
+    @@
+    -<button class="btn btn-secondary d-md-none" id="category-button">Categories</button>
+    +<button class="btn btn-secondary d-md-none btn-categories" id="category-button">Categories</button>
+    *** End Patch

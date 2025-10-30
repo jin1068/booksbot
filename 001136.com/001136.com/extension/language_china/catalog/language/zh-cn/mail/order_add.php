@@ -1,0 +1,36 @@
+<?php
+// Text
+$_['text_subject']               = '%s - 订单号 %s';
+$_['text_greeting']              = '感谢您在 %s 网站购物，您的订单已提交成功！我们将在确认您的付款后尽快处理您的订单。';
+$_['text_link']                  = '请单击以下链接查看您的订单：';
+$_['text_order_detail']          = '订单详情';
+$_['text_instruction']           = '说明';
+$_['text_order_id']              = '订单编号：';
+$_['text_date_added']            = '订单日期：';
+$_['text_order_status']          = '订单状态：';
+$_['text_payment_method']        = '付款方式：';
+$_['text_shipping_method']       = '配送方式：';
+$_['text_email']                 = 'E-mail：';
+$_['text_telephone']             = '联系电话：';
+$_['text_ip']                    = 'IP地址：';
+$_['text_payment_address']       = '付款地址';
+$_['text_shipping_address']      = '配送地址';
+$_['text_products']              = '商品列表';
+$_['text_product']               = '商品';
+$_['text_model']                 = '型号';
+$_['text_quantity']              = '数量';
+$_['text_price']                 = '金额';
+$_['text_order_total']           = '订单合计';
+$_['text_total']                 = '总计';
+$_['text_subscription']          = '订阅';
+$_['text_subscription_trial']    = '%s每%d%s支付%d次，则  ';
+$_['text_subscription_duration'] = '%s每%d%s支付%d次';
+$_['text_subscription_cancel']   = '%s每%d%s，直到取消';
+$_['text_day']                   = '天';
+$_['text_week']                  = '周';
+$_['text_semi_month']            = '半个月';
+$_['text_month']                 = '月';
+$_['text_year']                  = '年';
+$_['text_download']              = '确认付款后您将通过以下链接下载商品';
+$_['text_comment']               = '订单留言';
+$_['text_footer']                = '如果您有任何疑问， 请直接回复此邮件。';

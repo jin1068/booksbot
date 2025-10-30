@@ -1,0 +1,198 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="button" id="button-auto-generate" data-bs-toggle="tooltip" title="自动生成缺失的Meta标签" class="btn btn-info">
+          <i class="fa-solid fa-magic"></i> 自动生成Meta标签
+        </button>
+      </div>
+      <h1><i class="fa-solid fa-edit"></i> 产品SEO直接编辑</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-list"></i> 产品列表</div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <h5><i class="fa-solid fa-info-circle"></i> 使用说明</h5>
+          <p>在线直接编辑产品的SEO信息，无需导出/导入CSV文件。</p>
+          <ul class="mb-0">
+            <li>✓ 点击产品行即可进入编辑页面</li>
+            <li>✓ 支持多语言独立编辑</li>
+            <li>✓ 实时保存，立即生效</li>
+            <li>✓ 自动生成功能可快速填充缺失的Meta标签</li>
+          </ul>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- 搜索过滤 -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="input-group">
+              <input type="text" name="filter_name" value="{{ filter_name }}" placeholder="搜索产品名称或型号..." class="form-control" />
+              <button type="button" id="button-filter" class="btn btn-primary"><i class="fa-solid fa-search"></i> 搜索</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 产品列表表格 -->
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th style="width: 150px;">产品型号</th>
+                <th>产品名称</th>
+                {% for language in languages %}
+                <th class="text-center" style="width: 120px;">
+                  <img src="{{ language.image }}" title="{{ language.name }}" alt="{{ language.name }}" style="height: 16px;" />
+                  {{ language.code|upper }}
+                  <br><small class="text-muted">完整度</small>
+                </th>
+                {% endfor %}
+                <th class="text-center" style="width: 100px;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if products %}
+                {% for product in products %}
+                <tr>
+                  <td>{{ product.product_id }}</td>
+                  <td>{{ product.model }}</td>
+                  <td>
+                    {% if product.languages[default_language_id] %}
+                      {{ product.languages[default_language_id].name }}
+                    {% else %}
+                      <span class="text-muted">(未设置)</span>
+                    {% endif %}
+                  </td>
+                  {% for language in languages %}
+                  <td class="text-center">
+                    {% set lang_data = product.languages[language.language_id] %}
+                    {% if lang_data %}
+                      {% set total = 5 %}
+                      {% set complete = 0 %}
+                      {% if lang_data.has_description %}{% set complete = complete + 1 %}{% endif %}
+                      {% if lang_data.has_meta_title %}{% set complete = complete + 1 %}{% endif %}
+                      {% if lang_data.has_meta_description %}{% set complete = complete + 1 %}{% endif %}
+                      {% if lang_data.has_meta_keyword %}{% set complete = complete + 1 %}{% endif %}
+                      {% if lang_data.has_tag %}{% set complete = complete + 1 %}{% endif %}
+                      
+                      {% set percent = (complete / total * 100)|round %}
+                      {% if percent == 100 %}
+                        <span class="badge bg-success">{{ percent }}%</span>
+                      {% elseif percent >= 60 %}
+                        <span class="badge bg-warning">{{ percent }}%</span>
+                      {% else %}
+                        <span class="badge bg-danger">{{ percent }}%</span>
+                      {% endif %}
+                      <br>
+                      <small class="text-muted">{{ complete }}/{{ total }}</small>
+                    {% else %}
+                      <span class="badge bg-secondary">0%</span>
+                    {% endif %}
+                  </td>
+                  {% endfor %}
+                  <td class="text-center">
+                    <a href="{{ product.edit_url }}" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" title="编辑">
+                      <i class="fa-solid fa-pencil"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="{{ 4 + languages|length }}" class="text-center">暂无产品数据</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="row">
+          <div class="col-sm-6 text-start">{{ results }}</div>
+          <div class="col-sm-6 text-end">{{ pagination }}</div>
+        </div>
+
+        <!-- 图例说明 -->
+        <div class="alert alert-light mt-3">
+          <h6>完整度说明：</h6>
+          <p class="mb-1">每种语言包含5个字段：产品描述、Meta标题、Meta描述、Meta关键字、产品标签</p>
+          <p class="mb-0">
+            <span class="badge bg-success">100%</span> 全部完整 | 
+            <span class="badge bg-warning">60%-99%</span> 部分完整 | 
+            <span class="badge bg-danger">0%-59%</span> 需要补充
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+// 搜索过滤
+$('#button-filter').on('click', function() {
+    var url = 'index.php?route=catalog/product_seo_direct&user_token={{ user_token }}';
+    
+    var filter_name = $('input[name=\'filter_name\']').val();
+    
+    if (filter_name) {
+        url += '&filter_name=' + encodeURIComponent(filter_name);
+    }
+    
+    location = url;
+});
+
+$('input[name=\'filter_name\']').on('keydown', function(e) {
+    if (e.keyCode == 13) {
+        $('#button-filter').trigger('click');
+    }
+});
+
+// 自动生成Meta标签
+$('#button-auto-generate').on('click', function() {
+    if (!confirm('此操作将为所有缺少Meta标题和Meta描述的产品自动生成。\n\n是否继续？')) {
+        return;
+    }
+    
+    var btn = $(this);
+    btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 正在生成...');
+    
+    $.ajax({
+        url: '{{ auto_generate_url }}',
+        type: 'POST',
+        dataType: 'json',
+        success: function(json) {
+            if (json.error) {
+                $('#alert-container').html('<div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-exclamation-circle"></i> ' + json.error + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+            }
+            
+            if (json.success) {
+                $('#alert-container').html('<div class="alert alert-success alert-dismissible"><i class="fa-solid fa-check-circle"></i> ' + json.success + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+                
+                // 刷新页面
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
+            }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+            $('#alert-container').html('<div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-exclamation-circle"></i> 操作失败：' + thrownError + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+        },
+        complete: function() {
+            btn.prop('disabled', false).html('<i class="fa-solid fa-magic"></i> 自动生成Meta标签');
+        }
+    });
+});
+</script>
+
+{{ footer }}
+

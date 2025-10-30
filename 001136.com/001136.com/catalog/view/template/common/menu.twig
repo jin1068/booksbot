@@ -1,0 +1,189 @@
+<section class="amazon-menu" data-amazon-menu>
+  <div class="amazon-menu__background"></div>
+  <div class="container">
+    <div class="amazon-menu__bar">
+      <div class="amazon-menu__left">
+        <button type="button"
+                class="amazon-menu__all"
+                aria-expanded="false"
+                aria-controls="amazon-menu-panel"
+                data-menu-toggle>
+          <span class="amazon-menu__all-icon">
+            <i class="fa-solid fa-bars"></i>
+          </span>
+          <span class="amazon-menu__all-text">{{ text_all_categories }}</span>
+          <span class="amazon-menu__all-caret"><i class="fa-solid fa-caret-down"></i></span>
+        </button>
+        <ul class="amazon-menu__quick-links" role="list">
+          <li class="amazon-menu__quick-item">
+            <a href="{{ home }}" class="amazon-menu__quick-link"{% if is_home %} data-lucky-scroll{% endif %}>
+              <i class="fa-solid fa-gift"></i>
+              <span>{{ text_lucky_purchase }}</span>
+            </a>
+          </li>
+          {% for category in categories %}
+            {% if loop.index0 < 5 %}
+              <li class="amazon-menu__quick-item">
+                <a href="{{ category.href }}" class="amazon-menu__quick-link">
+                  <span>{{ category.name }}</span>
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="amazon-menu__right">
+        <div class="amazon-menu__promo" role="presentation">
+          <span class="amazon-menu__promo-label">{{ text_drawer_title }}</span>
+          <span class="amazon-menu__promo-pill">{{ text_all }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if categories %}
+    <div class="amazon-menu__mega" id="amazon-menu-panel" aria-hidden="true" data-menu-panel>
+      <div class="amazon-menu__mega-overlay" data-menu-overlay></div>
+      <div class="amazon-menu__mega-container">
+        <div class="amazon-menu__mega-header">
+          <h2 class="amazon-menu__mega-title">{{ text_all_categories }}</h2>
+          <button type="button" class="amazon-menu__close" aria-label="{{ text_drawer_close }}" data-menu-close>
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="amazon-menu__mega-content">
+          {% for category in categories %}
+            <section class="amazon-menu__group" data-menu-group>
+              <header class="amazon-menu__group-header">
+                <a href="{{ category.href }}" class="amazon-menu__group-title">{{ category.name }}</a>
+                <a href="{{ category.href }}"
+                   class="amazon-menu__group-view-all">
+                  {{ text_drawer_view_all|replace({'%s': category.display_name}) }}
+                  <i class="fa-solid fa-chevron-right"></i>
+                </a>
+              </header>
+
+              {% if category.children %}
+                <div class="amazon-menu__subgrid">
+                  {% for child in category.children %}
+                    <div class="amazon-menu__subgroup">
+                      <a href="{{ child.href }}" class="amazon-menu__subgroup-title">{{ child.name }}</a>
+                      {% if child.children %}
+                        <ul class="amazon-menu__sublist" role="list">
+                          {% for grandchild in child.children %}
+                            {% if loop.index0 < 6 %}
+                              <li class="amazon-menu__subitem">
+                                <a href="{{ grandchild.href }}" class="amazon-menu__sublink">{{ grandchild.name }}</a>
+                              </li>
+                            {% endif %}
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="amazon-menu__empty">{{ text_drawer_view_all|replace({'%s': category.display_name}) }}</p>
+              {% endif %}
+            </section>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+<script>
+  (() => {
+    const root = document.querySelector('[data-amazon-menu]');
+    if (!root) {
+      return;
+    }
+
+    const toggle = root.querySelector('[data-menu-toggle]');
+    const panel = root.querySelector('[data-menu-panel]');
+    const overlay = root.querySelector('[data-menu-overlay]');
+    const closes = root.querySelectorAll('[data-menu-close]');
+
+    if (!toggle || !panel) {
+      return;
+    }
+
+    const openClass = 'is-open';
+
+    const openPanel = () => {
+      panel.setAttribute('aria-hidden', 'false');
+      toggle.setAttribute('aria-expanded', 'true');
+      panel.classList.add(openClass);
+      document.body.classList.add('amazon-menu-open');
+    };
+
+    const closePanel = () => {
+      panel.setAttribute('aria-hidden', 'true');
+      toggle.setAttribute('aria-expanded', 'false');
+      panel.classList.remove(openClass);
+      document.body.classList.remove('amazon-menu-open');
+    };
+
+    toggle.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (panel.classList.contains(openClass)) {
+        closePanel();
+      } else {
+        openPanel();
+      }
+    });
+
+    closes.forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        closePanel();
+      });
+    });
+
+    overlay?.addEventListener('click', closePanel);
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && panel.classList.contains(openClass)) {
+        closePanel();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1200) {
+        panel.style.removeProperty('--menu-height');
+      }
+      if (window.innerWidth > 991 && panel.classList.contains(openClass)) {
+        closePanel();
+      }
+    });
+{% if is_home %}
+    const luckyTargets = root.querySelectorAll('[data-lucky-scroll]');
+    const luckyAnchor = document.getElementById('lucky-purchase');
+    if (luckyTargets.length && luckyAnchor) {
+      luckyTargets.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          
+          if (panel.classList.contains(openClass)) {
+            closePanel();
+          }
+          
+          // 使用 scrollTo 而不是 scrollIntoView，避免修改 URL hash
+          const targetPosition = luckyAnchor.getBoundingClientRect().top + window.pageYOffset;
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'smooth'
+          });
+          
+          // 确保URL中没有hash
+          if (window.location.hash) {
+            history.replaceState(null, null, window.location.pathname + window.location.search);
+          }
+        });
+      });
+    }
+{% endif %}
+  })();
+</script>

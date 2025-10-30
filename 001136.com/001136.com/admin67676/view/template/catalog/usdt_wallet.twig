@@ -1,0 +1,359 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="submit" form="form-usdt-wallet" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+        <a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header">
+        <i class="fa-solid fa-wallet"></i> {{ text_edit }}
+        <button type="button" class="btn btn-sm btn-outline-light float-end d-md-none" id="toggle-mobile-view">
+          <i class="fa-solid fa-compress"></i> <span id="toggle-text">简化视图</span>
+        </button>
+      </div>
+      <div class="card-body">
+        <form id="form-usdt-wallet" method="post" action="{{ save }}" data-oc-toggle="ajax">
+          <div class="table-responsive">
+            <table id="wallet-table" class="table table-bordered table-hover align-middle">
+              <thead>
+                <tr>
+                  <th style="width: 200px;">{{ entry_network }}</th>
+                  <th>{{ entry_address }}</th>
+                  <th style="width: 250px;">收款二维码</th>
+                  <th class="text-end" style="width: 60px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for wallet in wallets %}
+                  <tr class="wallet-row" data-index="{{ loop.index0 }}">
+                    <td data-label="{{ entry_network }}">
+                      <div class="mobile-row-header d-md-none">
+                        <strong>{{ wallet.network|default('新网络') }}</strong>
+                        <button type="button" class="btn btn-sm btn-outline-secondary toggle-row-details">
+                          <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                      </div>
+                      <input type="text" name="network[]" value="{{ wallet.network }}" class="form-control" placeholder="网络名称"/>
+                    </td>
+                    <td data-label="{{ entry_address }}" class="collapsible-cell">
+                      <input type="text" name="address[]" value="{{ wallet.address }}" class="form-control" placeholder="收款地址"/>
+                    </td>
+                    <td data-label="收款二维码" class="collapsible-cell">
+                      <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <input type="file" class="d-none" id="file-image-{{ loop.index0 }}" accept="image/*" data-index="{{ loop.index0 }}"/>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('file-image-{{ loop.index0 }}').click()"><i class="fa-solid fa-upload"></i> 上传</button>
+                        <input type="hidden" name="image[]" value="{{ wallet.image }}" id="input-image-{{ loop.index0 }}"/>
+                        <img src="{{ wallet.thumb }}" alt="" id="thumb-image-{{ loop.index0 }}" class="img-thumbnail" style="max-height: 50px; max-width: 80px;"/>
+                        {% if wallet.image %}
+                          <button type="button" class="btn btn-danger btn-sm" data-clear-image="{{ loop.index0 }}"><i class="fa-solid fa-times"></i></button>
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td class="text-end collapsible-cell">
+                      <button type="button" class="btn btn-danger btn-sm" data-remove-row><i class="fa-solid fa-minus"></i></button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4">
+                    <button type="button" class="btn btn-outline-secondary" id="button-add-row"><i class="fa-solid fa-plus"></i> {{ text_add_row }}</button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+/* 移动端响应式样式 */
+@media (max-width: 767px) {
+  /* 隐藏表头 */
+  #wallet-table thead {
+    display: none;
+  }
+  
+  /* 表格行变为卡片式布局 */
+  #wallet-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background: #fff;
+  }
+  
+  /* 单元格变为块级元素 */
+  #wallet-table tbody td {
+    display: block;
+    border: none;
+    padding: 0.75rem;
+    text-align: left !important;
+  }
+  
+  /* 移动端行头部 */
+  .mobile-row-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  /* 折叠状态的单元格 */
+  .wallet-row.collapsed .collapsible-cell {
+    display: none !important;
+  }
+  
+  /* 数据标签 */
+  #wallet-table tbody td:not(:first-child)::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+  }
+  
+  /* 调整图片容器 */
+  #wallet-table tbody td .d-flex {
+    justify-content: flex-start !important;
+  }
+  
+  /* 按钮适配 */
+  #wallet-table .btn-sm {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+  
+  /* 输入框适配 */
+  #wallet-table .form-control {
+    width: 100%;
+  }
+  
+  /* 图片预览适配 */
+  #wallet-table .img-thumbnail {
+    max-width: 100px !important;
+    max-height: 100px !important;
+  }
+}
+
+/* 切换图标动画 */
+.toggle-row-details i {
+  transition: transform 0.3s ease;
+}
+
+.wallet-row.collapsed .toggle-row-details i {
+  transform: rotate(-90deg);
+}
+
+/* 简化视图模式 */
+.simplified-view .collapsible-cell {
+  display: none !important;
+}
+
+.simplified-view .mobile-row-header {
+  display: flex !important;
+}
+</style>
+<script type="text/javascript"><!--
+var rowIndex = {{ wallets|length }};
+
+// 移动端折叠/展开功能
+$(document).on('click', '.toggle-row-details', function(e) {
+  e.preventDefault();
+  var row = $(this).closest('.wallet-row');
+  row.toggleClass('collapsed');
+});
+
+// 简化视图切换
+$('#toggle-mobile-view').on('click', function() {
+  var tbody = $('#wallet-table tbody');
+  var icon = $(this).find('i');
+  var text = $('#toggle-text');
+  
+  if (tbody.hasClass('simplified-view')) {
+    tbody.removeClass('simplified-view');
+    $('.wallet-row').removeClass('collapsed');
+    icon.removeClass('fa-expand').addClass('fa-compress');
+    text.text('简化视图');
+  } else {
+    tbody.addClass('simplified-view');
+    $('.wallet-row').addClass('collapsed');
+    icon.removeClass('fa-compress').addClass('fa-expand');
+    text.text('完整视图');
+  }
+});
+
+document.getElementById('button-add-row').addEventListener('click', function () {
+  var tbody = document.querySelector('#wallet-table tbody');
+  var tr = document.createElement('tr');
+  tr.className = 'wallet-row';
+  tr.setAttribute('data-index', rowIndex);
+  tr.innerHTML = '<td data-label="{{ entry_network }}">'
+    + '<div class="mobile-row-header d-md-none">'
+    + '<strong>新网络</strong>'
+    + '<button type="button" class="btn btn-sm btn-outline-secondary toggle-row-details">'
+    + '<i class="fa-solid fa-chevron-down"></i>'
+    + '</button>'
+    + '</div>'
+    + '<input type="text" name="network[]" value="" class="form-control" placeholder="网络名称"/></td>'
+    + '<td data-label="{{ entry_address }}" class="collapsible-cell">'
+    + '<input type="text" name="address[]" value="" class="form-control" placeholder="收款地址"/></td>'
+    + '<td data-label="收款二维码" class="collapsible-cell">'
+    + '<div class="d-flex align-items-center gap-2 flex-wrap">'
+    + '<input type="file" class="d-none" id="file-image-' + rowIndex + '" accept="image/*" data-index="' + rowIndex + '"/>'
+    + '<button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById(\'file-image-' + rowIndex + '\').click()"><i class="fa-solid fa-upload"></i> 上传</button>'
+    + '<input type="hidden" name="image[]" value="" id="input-image-' + rowIndex + '"/>'
+    + '<img src="{{ placeholder }}" alt="" id="thumb-image-' + rowIndex + '" class="img-thumbnail" style="max-height: 50px; max-width: 80px;"/>'
+    + '</div></td>'
+    + '<td class="text-end collapsible-cell"><button type="button" class="btn btn-danger btn-sm" data-remove-row><i class="fa-solid fa-minus"></i></button></td>';
+  tbody.appendChild(tr);
+  rowIndex++;
+});
+
+document.getElementById('wallet-table').addEventListener('click', function (event) {
+  if (event.target.closest('[data-remove-row]')) {
+    event.preventDefault();
+    var row = event.target.closest('tr');
+    if (row && row.parentNode.children.length > 1) {
+      row.remove();
+    }
+  }
+});
+
+// 文件上传处理
+$(document).on('change', 'input[type="file"][id^="file-image-"]', function() {
+  var input = this;
+  var index = $(input).data('index');
+  var file = input.files[0];
+  
+  if (!file) return;
+  
+  // 检查文件类型
+  if (!file.type.match('image.*')) {
+    alert('请选择图片文件！');
+    return;
+  }
+  
+  // 检查文件大小（最大5MB）
+  if (file.size > 5 * 1024 * 1024) {
+    alert('图片大小不能超过5MB！');
+    return;
+  }
+  
+  var formData = new FormData();
+  formData.append('image', file);
+  
+  $.ajax({
+    url: 'index.php?route=catalog/usdt_wallet.upload&user_token={{ user_token }}',
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    dataType: 'json',
+    beforeSend: function() {
+      $(input).prop('disabled', true);
+      $('#thumb-image-' + index).css('opacity', '0.5');
+    },
+    success: function(json) {
+      if (json.error) {
+        alert(json.error);
+      } else if (json.success && json.path && json.thumb) {
+        $('#input-image-' + index).val(json.path);
+        $('#thumb-image-' + index).attr('src', json.thumb);
+        
+        // 添加删除按钮（如果还没有）
+        var clearBtn = $('#thumb-image-' + index).parent().find('[data-clear-image="' + index + '"]');
+        if (clearBtn.length === 0) {
+          $('#thumb-image-' + index).after('<button type="button" class="btn btn-danger btn-sm" data-clear-image="' + index + '"><i class="fa-solid fa-times"></i></button>');
+        }
+      }
+    },
+    error: function() {
+      alert('上传失败，请重试！');
+    },
+    complete: function() {
+      $(input).prop('disabled', false);
+      $(input).val(''); // 清空input以便再次选择
+      $('#thumb-image-' + index).css('opacity', '1');
+    }
+  });
+});
+
+// 清除图片
+$(document).on('click', '[data-clear-image]', function(e) {
+  e.preventDefault();
+  var index = $(this).data('clear-image');
+  $('#input-image-' + index).val('');
+  $('#thumb-image-' + index).attr('src', '{{ placeholder }}');
+  $(this).remove();
+});
+
+$('#form-usdt-wallet').on('submit', function (e) {
+  e.preventDefault();
+
+  var form = this;
+
+  $('#wallet-table input').removeClass('is-invalid');
+  $('#wallet-table .invalid-feedback').remove();
+
+  $.ajax({
+    url: form.action,
+    type: 'post',
+    data: $(form).serialize(),
+    dataType: 'json',
+    beforeSend: function () {
+      $(form).find('button[type="submit"]').prop('disabled', true);
+      $('.alert-danger, .alert-success').remove();
+    },
+    complete: function () {
+      $(form).find('button[type="submit"]').prop('disabled', false);
+    },
+    success: function (json) {
+      if (json['error']) {
+        if (json['error']['warning']) {
+          $('#content .card-body').prepend('<div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-circle-exclamation"></i> ' + json['error']['warning'] + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+        }
+
+        if (json['error']['network']) {
+          json['error']['network'].forEach(function (message, index) {
+            if (message) {
+              $('#wallet-table tbody tr').eq(index).find('input[name="network[]"]').addClass('is-invalid');
+              $('#wallet-table tbody tr').eq(index).find('input[name="network[]"]').after('<div class="invalid-feedback">' + message + '</div>');
+            }
+          });
+        }
+
+        if (json['error']['address']) {
+          json['error']['address'].forEach(function (message, index) {
+            if (message) {
+              $('#wallet-table tbody tr').eq(index).find('input[name="address[]"]').addClass('is-invalid');
+              $('#wallet-table tbody tr').eq(index).find('input[name="address[]"]').after('<div class="invalid-feedback">' + message + '</div>');
+            }
+          });
+        }
+      }
+
+      if (json['success']) {
+        $('#content .card-body').prepend('<div class="alert alert-success alert-dismissible"><i class="fa-solid fa-circle-check"></i> ' + json['success'] + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+      }
+    }
+  });
+});
+//--></script>
+{{ footer }}

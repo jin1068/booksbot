@@ -1,0 +1,42 @@
+<form id="form-history" data-oc-toggle="ajax" data-oc-load="{{ action }}" data-oc-target="#history-list">
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover">
+      <thead>
+        <tr>
+          <th><a href="{{ sort_title }}"{% if sort == 'dd.title' %} class="{{ order|lower }}"{% endif %}>{{ column_title }}</a></th>
+          <th class="text-end"><a href="{{ sort_issue }}"{% if sort == 'issue.issue_no' %} class="{{ order|lower }}"{% endif %}>{{ column_issue }}</a></th>
+          <th>{{ column_winner }}</th>
+          <th>{{ column_ticket }}</th>
+          <th class="text-end">{{ column_total }}</th>
+          <th class="text-center">{{ column_status }}</th>
+          <th class="text-end"><a href="{{ sort_modified }}"{% if sort == 'issue.date_modified' %} class="{{ order|lower }}"{% endif %}>{{ column_draw_time }}</a></th>
+          <th class="text-end"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if draws %}
+          {% for draw in draws %}
+            <tr>
+              <td>{{ draw.title }}<br/>{% if draw.sub_title %}<small class="text-muted">{{ draw.sub_title }}</small>{% endif %}</td>
+              <td class="text-end">#{{ draw.issue_no }}</td>
+              <td>{{ draw.winner }}</td>
+              <td>{{ draw.winning_ticket ?: '-' }}</td>
+              <td class="text-end">{{ draw.joined_slots }}/{{ draw.total_slots }}</td>
+              <td class="text-center">{{ draw.status }}</td>
+              <td class="text-end">{{ draw.date_modified }}</td>
+              <td class="text-end"><a href="{{ draw.view }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i></a></td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td class="text-center" colspan="8">{{ text_no_results }}</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="row">
+    <div class="col-sm-6 text-start">{{ pagination }}</div>
+    <div class="col-sm-6 text-end">{{ results }}</div>
+  </div>
+</form>

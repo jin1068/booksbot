@@ -1,0 +1,591 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="button" id="button-save-all" class="btn btn-success" data-bs-toggle="tooltip" title="保存所有修改">
+          <i class="fa-solid fa-save"></i> 批量保存
+        </button>
+      </div>
+      <h1>产品SEO在线编辑器</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    
+    <!-- 提示信息 -->
+    <div class="alert alert-info alert-dismissible">
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <i class="fa-solid fa-info-circle"></i> 
+      <strong>在线编辑模式：</strong>直接在网页上编辑产品信息，修改后点击"保存"按钮即可生效。
+      <strong class="text-danger">重要：中英文内容必须分离！</strong>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <!-- 搜索和过滤 -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="input-group">
+              <input type="text" id="input-search" class="form-control" placeholder="搜索产品名称或型号..." />
+              <button type="button" id="button-search" class="btn btn-primary">
+                <i class="fa-solid fa-search"></i> 搜索
+              </button>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <select id="input-limit" class="form-select">
+              <option value="10">每页显示 10 个</option>
+              <option value="20" selected>每页显示 20 个</option>
+              <option value="50">每页显示 50 个</option>
+              <option value="100">每页显示 100 个</option>
+            </select>
+          </div>
+          <div class="col-md-3 text-end">
+            <button type="button" id="button-reload" class="btn btn-secondary">
+              <i class="fa-solid fa-refresh"></i> 刷新
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 产品列表 -->
+    <div id="product-list-container">
+      <div class="text-center p-5">
+        <i class="fa-solid fa-spinner fa-spin fa-3x"></i>
+        <p class="mt-3">正在加载产品...</p>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div id="pagination-container" class="d-flex justify-content-center mt-3"></div>
+
+  </div>
+</div>
+
+<!-- 产品模板 -->
+<script type="text/html" id="product-template">
+<div class="card mb-3 product-item" data-product-id="{product_id}">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <strong>#{product_id}</strong> - {model}
+      <button type="button" class="btn btn-sm btn-link toggle-product" data-product-id="{product_id}">
+        <i class="fa-solid fa-chevron-down"></i> 展开编辑
+      </button>
+    </div>
+    <div>
+      <button type="button" class="btn btn-sm btn-success save-product" data-product-id="{product_id}">
+        <i class="fa-solid fa-save"></i> 保存
+      </button>
+    </div>
+  </div>
+  <div class="card-body product-details" style="display: none;">
+    
+    <!-- 语言标签页 -->
+    <ul class="nav nav-tabs" role="tablist">
+      {language_tabs}
+    </ul>
+    
+    <div class="tab-content mt-3">
+      {language_content}
+    </div>
+    
+  </div>
+</div>
+</script>
+
+<style>
+.product-item {
+  transition: all 0.3s ease;
+}
+.product-item:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.product-details textarea {
+  font-family: monospace;
+  font-size: 12px;
+}
+.char-counter {
+  font-size: 11px;
+  color: #666;
+}
+.char-counter.text-warning {
+  color: #ff9800 !important;
+}
+.char-counter.text-danger {
+  color: #f44336 !important;
+}
+.language-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-right: 5px;
+}
+.badge-chinese {
+  background: #4caf50;
+  color: white;
+}
+.badge-english {
+  background: #2196f3;
+  color: white;
+}
+.badge-french {
+  background: #9c27b0;
+  color: white;
+}
+.modified-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #ff9800;
+  border-radius: 50%;
+  margin-left: 5px;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+</style>
+
+<script type="text/javascript">
+var currentPage = 1;
+var currentLimit = 20;
+var currentSearch = '';
+var modifiedProducts = new Set();
+
+// 语言配置
+var languages = {{ languages|json_encode|raw }};
+
+// 加载产品列表
+function loadProducts(page, limit, search) {
+    currentPage = page || 1;
+    currentLimit = limit || 20;
+    currentSearch = search || '';
+    
+    $('#product-list-container').html('<div class="text-center p-5"><i class="fa-solid fa-spinner fa-spin fa-3x"></i><p class="mt-3">正在加载产品...</p></div>');
+    
+    $.ajax({
+        url: '{{ list_url }}',
+        type: 'GET',
+        data: {
+            page: currentPage,
+            limit: currentLimit,
+            search: currentSearch
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                renderProducts(response.products);
+                renderPagination(response.page, response.pages, response.total);
+            } else {
+                $('#product-list-container').html('<div class="alert alert-danger">加载失败</div>');
+            }
+        },
+        error: function() {
+            $('#product-list-container').html('<div class="alert alert-danger">加载失败，请重试</div>');
+        }
+    });
+}
+
+// 渲染产品列表
+function renderProducts(products) {
+    if (products.length === 0) {
+        $('#product-list-container').html('<div class="alert alert-warning"><i class="fa-solid fa-exclamation-triangle"></i> 没有找到产品</div>');
+        return;
+    }
+    
+    var html = '';
+    
+    products.forEach(function(product) {
+        var productHtml = $('#product-template').html();
+        
+        // 替换基本信息
+        productHtml = productHtml.replace(/{product_id}/g, product.product_id);
+        productHtml = productHtml.replace(/{model}/g, escapeHtml(product.model));
+        
+        // 生成语言标签页
+        var languageTabs = '';
+        var languageContent = '';
+        
+        Object.keys(product.descriptions).forEach(function(langId, index) {
+            var desc = product.descriptions[langId];
+            var isActive = index === 0 ? 'active' : '';
+            var langBadgeClass = desc.language_code.includes('zh') ? 'badge-chinese' : 
+                                 desc.language_code.includes('en') ? 'badge-english' : 'badge-french';
+            
+            // 标签页标题
+            languageTabs += '<li class="nav-item">' +
+                '<button class="nav-link ' + isActive + '" data-bs-toggle="tab" data-bs-target="#product-' + product.product_id + '-lang-' + langId + '">' +
+                '<span class="language-badge ' + langBadgeClass + '">' + desc.language_code.toUpperCase() + '</span> ' +
+                desc.language_name +
+                '</button></li>';
+            
+            // 标签页内容
+            languageContent += '<div class="tab-pane fade ' + (isActive ? 'show active' : '') + '" id="product-' + product.product_id + '-lang-' + langId + '">';
+            languageContent += '<div class="row">';
+            
+            // 产品名称
+            languageContent += '<div class="col-md-12 mb-3">' +
+                '<label class="form-label"><strong>产品名称</strong> <span class="text-danger">*</span></label>' +
+                '<input type="text" class="form-control" name="name" data-product-id="' + product.product_id + '" data-lang-id="' + langId + '" value="' + escapeHtml(desc.name) + '" />' +
+                '</div>';
+            
+            // Meta标题
+            languageContent += '<div class="col-md-12 mb-3">' +
+                '<label class="form-label"><strong>Meta标题</strong> <small class="text-muted">(建议50-60字符)</small></label>' +
+                '<input type="text" class="form-control meta-title-input" name="meta_title" data-product-id="' + product.product_id + '" data-lang-id="' + langId + '" value="' + escapeHtml(desc.meta_title) + '" maxlength="255" />' +
+                '<div class="char-counter" data-for="meta-title"></div>' +
+                '</div>';
+            
+            // Meta描述
+            languageContent += '<div class="col-md-12 mb-3">' +
+                '<label class="form-label"><strong>Meta描述</strong> <small class="text-muted">(建议150-160字符)</small></label>' +
+                '<textarea class="form-control meta-desc-input" name="meta_description" data-product-id="' + product.product_id + '" data-lang-id="' + langId + '" rows="2" maxlength="255">' + escapeHtml(desc.meta_description) + '</textarea>' +
+                '<div class="char-counter" data-for="meta-desc"></div>' +
+                '</div>';
+            
+            // Meta关键字
+            languageContent += '<div class="col-md-12 mb-3">' +
+                '<label class="form-label"><strong>Meta关键字</strong> <small class="text-muted">(用逗号分隔)</small></label>' +
+                '<input type="text" class="form-control" name="meta_keyword" data-product-id="' + product.product_id + '" data-lang-id="' + langId + '" value="' + escapeHtml(desc.meta_keyword) + '" />' +
+                '</div>';
+            
+            // 产品标签
+            languageContent += '<div class="col-md-12 mb-3">' +
+                '<label class="form-label"><strong>产品标签</strong> <small class="text-muted">(用逗号分隔)</small></label>' +
+                '<input type="text" class="form-control" name="tag" data-product-id="' + product.product_id + '" data-lang-id="' + langId + '" value="' + escapeHtml(desc.tag) + '" />' +
+                '</div>';
+            
+            // 产品描述
+            languageContent += '<div class="col-md-12 mb-3">' +
+                '<label class="form-label"><strong>产品描述</strong> <small class="text-muted">(支持HTML)</small></label>' +
+                '<textarea class="form-control" name="description" data-product-id="' + product.product_id + '" data-lang-id="' + langId + '" rows="6">' + escapeHtml(desc.description) + '</textarea>' +
+                '</div>';
+            
+            languageContent += '</div></div>';
+        });
+        
+        productHtml = productHtml.replace(/{language_tabs}/g, languageTabs);
+        productHtml = productHtml.replace(/{language_content}/g, languageContent);
+        
+        html += productHtml;
+    });
+    
+    $('#product-list-container').html(html);
+    
+    // 初始化字符计数器
+    updateAllCharCounters();
+    
+    // 绑定输入事件
+    bindInputEvents();
+}
+
+// 绑定输入事件
+function bindInputEvents() {
+    // 监听输入变化
+    $('.product-item input, .product-item textarea').on('input', function() {
+        var productId = $(this).data('product-id');
+        modifiedProducts.add(productId);
+        
+        // 更新字符计数
+        if ($(this).hasClass('meta-title-input')) {
+            updateCharCounter($(this), $(this).closest('.mb-3').find('[data-for="meta-title"]'), 50, 60);
+        } else if ($(this).hasClass('meta-desc-input')) {
+            updateCharCounter($(this), $(this).closest('.mb-3').find('[data-for="meta-desc"]'), 150, 160);
+        }
+        
+        // 显示修改标记
+        if (!$('.product-item[data-product-id="' + productId + '"] .card-header').find('.modified-indicator').length) {
+            $('.product-item[data-product-id="' + productId + '"] .card-header strong').after('<span class="modified-indicator" title="已修改"></span>');
+        }
+    });
+    
+    // 展开/收起
+    $('.toggle-product').on('click', function() {
+        var productId = $(this).data('product-id');
+        var details = $('.product-item[data-product-id="' + productId + '"] .product-details');
+        var icon = $(this).find('i');
+        
+        details.slideToggle(300);
+        icon.toggleClass('fa-chevron-down fa-chevron-up');
+        $(this).html(icon.prop('outerHTML') + (icon.hasClass('fa-chevron-up') ? ' 收起' : ' 展开编辑'));
+    });
+    
+    // 保存单个产品
+    $('.save-product').on('click', function() {
+        var productId = $(this).data('product-id');
+        saveProduct(productId);
+    });
+}
+
+// 更新所有字符计数器
+function updateAllCharCounters() {
+    $('.meta-title-input').each(function() {
+        updateCharCounter($(this), $(this).closest('.mb-3').find('[data-for="meta-title"]'), 50, 60);
+    });
+    $('.meta-desc-input').each(function() {
+        updateCharCounter($(this), $(this).closest('.mb-3').find('[data-for="meta-desc"]'), 150, 160);
+    });
+}
+
+// 更新字符计数器
+function updateCharCounter($input, $counter, minLen, maxLen) {
+    var len = $input.val().length;
+    var text = len + ' 字符';
+    
+    $counter.removeClass('text-success text-warning text-danger');
+    
+    if (len < minLen) {
+        $counter.addClass('text-warning');
+        text += ' (建议至少 ' + minLen + ' 字符)';
+    } else if (len >= minLen && len <= maxLen) {
+        $counter.addClass('text-success');
+        text += ' ✓';
+    } else {
+        $counter.addClass('text-danger');
+        text += ' (超出建议长度)';
+    }
+    
+    $counter.text(text);
+}
+
+// 保存单个产品
+function saveProduct(productId) {
+    var $productItem = $('.product-item[data-product-id="' + productId + '"]');
+    var descriptions = {};
+    
+    // 收集所有语言的数据
+    $productItem.find('input, textarea').each(function() {
+        var langId = $(this).data('lang-id');
+        var fieldName = $(this).attr('name');
+        var value = $(this).val();
+        
+        if (!descriptions[langId]) {
+            descriptions[langId] = {};
+        }
+        
+        descriptions[langId][fieldName] = value;
+    });
+    
+    // 发送AJAX请求
+    $.ajax({
+        url: '{{ save_url }}',
+        type: 'POST',
+        data: {
+            product_id: productId,
+            descriptions: descriptions
+        },
+        dataType: 'json',
+        beforeSend: function() {
+            $productItem.find('.save-product').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 保存中...');
+        },
+        success: function(json) {
+            if (json.success) {
+                showAlert('success', json.success);
+                modifiedProducts.delete(productId);
+                $productItem.find('.modified-indicator').remove();
+            } else if (json.error) {
+                showAlert('danger', json.error);
+            }
+        },
+        error: function() {
+            showAlert('danger', '保存失败，请重试');
+        },
+        complete: function() {
+            $productItem.find('.save-product').prop('disabled', false).html('<i class="fa-solid fa-save"></i> 保存');
+        }
+    });
+}
+
+// 批量保存所有修改
+$('#button-save-all').on('click', function() {
+    if (modifiedProducts.size === 0) {
+        showAlert('warning', '没有需要保存的修改');
+        return;
+    }
+    
+    if (!confirm('确定要保存所有 ' + modifiedProducts.size + ' 个修改的产品吗？')) {
+        return;
+    }
+    
+    var products = [];
+    
+    modifiedProducts.forEach(function(productId) {
+        var $productItem = $('.product-item[data-product-id="' + productId + '"]');
+        var descriptions = {};
+        
+        $productItem.find('input, textarea').each(function() {
+            var langId = $(this).data('lang-id');
+            var fieldName = $(this).attr('name');
+            var value = $(this).val();
+            
+            if (!descriptions[langId]) {
+                descriptions[langId] = {};
+            }
+            
+            descriptions[langId][fieldName] = value;
+        });
+        
+        products.push({
+            product_id: productId,
+            descriptions: descriptions
+        });
+    });
+    
+    $.ajax({
+        url: '{{ batch_save_url }}',
+        type: 'POST',
+        data: {
+            products: products
+        },
+        dataType: 'json',
+        beforeSend: function() {
+            $('#button-save-all').prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 保存中...');
+        },
+        success: function(json) {
+            if (json.success) {
+                showAlert('success', json.success);
+                modifiedProducts.clear();
+                $('.modified-indicator').remove();
+                
+                if (json.errors && json.errors.length > 0) {
+                    showAlert('warning', '部分产品保存失败：<br>' + json.errors.join('<br>'));
+                }
+            } else if (json.error) {
+                showAlert('danger', json.error);
+            }
+        },
+        error: function() {
+            showAlert('danger', '批量保存失败，请重试');
+        },
+        complete: function() {
+            $('#button-save-all').prop('disabled', false).html('<i class="fa-solid fa-save"></i> 批量保存');
+        }
+    });
+});
+
+// 搜索
+$('#button-search').on('click', function() {
+    loadProducts(1, currentLimit, $('#input-search').val());
+});
+
+$('#input-search').on('keypress', function(e) {
+    if (e.which === 13) {
+        $('#button-search').click();
+    }
+});
+
+// 每页显示数量
+$('#input-limit').on('change', function() {
+    loadProducts(1, $(this).val(), currentSearch);
+});
+
+// 刷新
+$('#button-reload').on('click', function() {
+    loadProducts(currentPage, currentLimit, currentSearch);
+});
+
+// 渲染分页
+function renderPagination(currentPage, totalPages, totalItems) {
+    if (totalPages <= 1) {
+        $('#pagination-container').html('');
+        return;
+    }
+    
+    var html = '<nav><ul class="pagination">';
+    
+    // 上一页
+    html += '<li class="page-item ' + (currentPage === 1 ? 'disabled' : '') + '">';
+    html += '<a class="page-link" href="#" data-page="' + (currentPage - 1) + '">上一页</a></li>';
+    
+    // 页码
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, currentPage + 2);
+    
+    if (startPage > 1) {
+        html += '<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>';
+        if (startPage > 2) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    for (var i = startPage; i <= endPage; i++) {
+        html += '<li class="page-item ' + (i === currentPage ? 'active' : '') + '">';
+        html += '<a class="page-link" href="#" data-page="' + i + '">' + i + '</a></li>';
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+        html += '<li class="page-item"><a class="page-link" href="#" data-page="' + totalPages + '">' + totalPages + '</a></li>';
+    }
+    
+    // 下一页
+    html += '<li class="page-item ' + (currentPage === totalPages ? 'disabled' : '') + '">';
+    html += '<a class="page-link" href="#" data-page="' + (currentPage + 1) + '">下一页</a></li>';
+    
+    html += '</ul></nav>';
+    html += '<div class="text-center mt-2 text-muted">共 ' + totalItems + ' 个产品，第 ' + currentPage + ' / ' + totalPages + ' 页</div>';
+    
+    $('#pagination-container').html(html);
+    
+    // 绑定分页点击事件
+    $('#pagination-container .page-link').on('click', function(e) {
+        e.preventDefault();
+        var page = $(this).data('page');
+        if (page) {
+            loadProducts(page, currentLimit, currentSearch);
+            $('html, body').animate({ scrollTop: 0 }, 300);
+        }
+    });
+}
+
+// 显示提示消息
+function showAlert(type, message) {
+    var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible">' +
+        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+        message + '</div>';
+    
+    $('#alert-container').html(alertHtml);
+    
+    $('html, body').animate({ scrollTop: 0 }, 300);
+    
+    setTimeout(function() {
+        $('#alert-container .alert').fadeOut(500, function() {
+            $(this).remove();
+        });
+    }, 5000);
+}
+
+// HTML转义
+function escapeHtml(text) {
+    if (!text) return '';
+    var map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// 页面加载时自动加载产品
+$(document).ready(function() {
+    loadProducts(1, 20, '');
+});
+</script>
+
+{{ footer }}
+

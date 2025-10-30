@@ -1,0 +1,78 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="submit" form="form-module" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-save"></i></button>
+        <a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+      <div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-circle-exclamation"></i> {{ error_warning }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endif %}
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-pencil"></i> {{ text_edit }}</div>
+      <div class="card-body">
+        <form id="form-module" action="{{ action }}" method="post">
+          <div class="row mb-3">
+            <label class="col-sm-2 col-form-label" for="input-status">{{ entry_status }}</label>
+            <div class="col-sm-10">
+              <div class="form-check form-switch form-switch-lg">
+                <input type="hidden" name="module_category_image_status" value="0"/>
+                <input type="checkbox" name="module_category_image_status" value="1" id="input-status" class="form-check-input"{% if module_category_image_status %} checked{% endif %}/>
+              </div>
+              <div class="form-text">{{ help_status }}</div>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <label class="col-sm-2 col-form-label" for="input-limit">{{ entry_limit }}</label>
+            <div class="col-sm-10">
+              <input type="number" name="module_category_image_limit" value="{{ module_category_image_limit }}" placeholder="{{ entry_limit }}" id="input-limit" class="form-control" min="1" max="20"/>
+              <div class="form-text">{{ help_limit }}</div>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <label class="col-sm-2 col-form-label" for="input-width">{{ entry_width }}</label>
+            <div class="col-sm-10">
+              <input type="number" name="module_category_image_width" value="{{ module_category_image_width }}" placeholder="{{ entry_width }}" id="input-width" class="form-control" min="50" max="500"/>
+              <div class="form-text">{{ help_width }}</div>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <label class="col-sm-2 col-form-label" for="input-height">{{ entry_height }}</label>
+            <div class="col-sm-10">
+              <input type="number" name="module_category_image_height" value="{{ module_category_image_height }}" placeholder="{{ entry_height }}" id="input-height" class="form-control" min="50" max="500"/>
+              <div class="form-text">{{ help_height }}</div>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <label class="col-sm-2 col-form-label" for="input-show-title">{{ entry_show_title }}</label>
+            <div class="col-sm-10">
+              <div class="form-check form-switch form-switch-lg">
+                <input type="hidden" name="module_category_image_show_title" value="0"/>
+                <input type="checkbox" name="module_category_image_show_title" value="1" id="input-show-title" class="form-check-input"{% if module_category_image_show_title %} checked{% endif %}/>
+              </div>
+              <div class="form-text">{{ help_show_title }}</div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}
+

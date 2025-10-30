@@ -1,0 +1,1089 @@
+﻿{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        {% if duobao_id and issue_id %}
+          <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modal-import-edit"><i class="fa-solid fa-file-import"></i> 导入配置</button>
+          <a href="index.php?route=catalog/duobao.export&user_token={{ user_token }}&duobao_id={{ duobao_id }}&issue_id={{ issue_id }}" data-bs-toggle="tooltip" title="导出当前配置" class="btn btn-success"><i class="fa-solid fa-file-export"></i> 导出配置</a>
+        {% endif %}
+        <button type="submit" form="form-duobao" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+        <a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-pencil"></i> {{ text_form }}</div>
+      <div class="card-body">
+        <form id="form-duobao" action="{{ save }}" method="post" data-oc-toggle="ajax">
+          <input type="hidden" name="duobao_id" value="{{ duobao_id }}"/>
+          <input type="hidden" name="issue_id" value="{{ issue_id }}"/>
+
+          <ul class="nav nav-tabs">
+            <li class="nav-item"><a href="#tab-general" data-bs-toggle="tab" class="nav-link active">{{ tab_general }}</a></li>
+            <li class="nav-item"><a href="#tab-data" data-bs-toggle="tab" class="nav-link">{{ tab_data }}</a></li>
+              <li class="nav-item"><a href="#tab-robot" data-bs-toggle="tab" class="nav-link">{{ tab_robot }}</a></li>
+          </ul>
+          <div class="tab-content pt-3">
+            <div id="tab-general" class="tab-pane fade show active">
+              <ul class="nav nav-tabs">
+                {% for language in languages %}
+                  <li class="nav-item">
+                    <a href="#language-{{ language.language_id }}" data-bs-toggle="tab" class="nav-link{% if loop.first %} active{% endif %}"><img src="{{ language.image }}" alt="{{ language.name }}" title="{{ language.name }}"/> {{ language.name }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+              <div class="tab-content pt-3">
+                {% for language in languages %}
+                  <div id="language-{{ language.language_id }}" class="tab-pane fade{% if loop.first %} show active{% endif %}">
+                    <div class="row mb-3 required">
+                      <label for="input-title-{{ language.language_id }}" class="col-sm-2 col-form-label">{{ entry_title }}</label>
+                      <div class="col-sm-10">
+                        <div class="input-group">
+                          <input type="text" name="duobao_description[{{ language.language_id }}][title]" value="{{ duobao_description[language.language_id].title }}" placeholder="{{ entry_title }}" id="input-title-{{ language.language_id }}" class="form-control"/>
+                          {% if loop.first %}
+                            <button type="button" class="btn btn-primary" id="btn-select-product" data-bs-toggle="modal" data-bs-target="#modal-product-selector">
+                              <i class="fa-solid fa-search"></i> 选择商品
+                            </button>
+                          {% endif %}
+                        </div>
+                        <div id="error-title-{{ language.language_id }}" class="invalid-feedback"></div>
+                        {% if loop.first %}
+                          <small class="text-muted">点击"选择商品"按钮可快速从商品库中选择并自动填充信息</small>
+                        {% endif %}
+                      </div>
+                    </div>
+                    <div class="row mb-3">
+                      <label for="input-sub-title-{{ language.language_id }}" class="col-sm-2 col-form-label">{{ entry_sub_title }}</label>
+                      <div class="col-sm-10">
+                        <input type="text" name="duobao_description[{{ language.language_id }}][sub_title]" value="{{ duobao_description[language.language_id].sub_title }}" placeholder="{{ entry_sub_title }}" id="input-sub-title-{{ language.language_id }}" class="form-control"/>
+                      </div>
+                    </div>
+                    <div class="row mb-3 required">
+                      <label for="input-meta-title-{{ language.language_id }}" class="col-sm-2 col-form-label">{{ entry_meta_title }}</label>
+                      <div class="col-sm-10">
+                        <input type="text" name="duobao_description[{{ language.language_id }}][meta_title]" value="{{ duobao_description[language.language_id].meta_title }}" placeholder="{{ entry_meta_title }}" id="input-meta-title-{{ language.language_id }}" class="form-control"/>
+                        <div id="error-meta-title-{{ language.language_id }}" class="invalid-feedback"></div>
+                      </div>
+                    </div>
+                    <div class="row mb-3">
+                      <label for="input-meta-description-{{ language.language_id }}" class="col-sm-2 col-form-label">{{ entry_meta_description }}</label>
+                      <div class="col-sm-10">
+                        <textarea name="duobao_description[{{ language.language_id }}][meta_description]" rows="3" placeholder="{{ entry_meta_description }}" id="input-meta-description-{{ language.language_id }}" class="form-control">{{ duobao_description[language.language_id].meta_description }}</textarea>
+                      </div>
+                    </div>
+                    <div class="row mb-3">
+                      <label for="input-meta-keyword-{{ language.language_id }}" class="col-sm-2 col-form-label">{{ entry_meta_keyword }}</label>
+                      <div class="col-sm-10">
+                        <textarea name="duobao_description[{{ language.language_id }}][meta_keyword]" rows="2" placeholder="{{ entry_meta_keyword }}" id="input-meta-keyword-{{ language.language_id }}" class="form-control">{{ duobao_description[language.language_id].meta_keyword }}</textarea>
+                      </div>
+                    </div>
+                    <div class="row mb-3">
+                      <label for="input-description-{{ language.language_id }}" class="col-sm-2 col-form-label">{{ entry_description }}</label>
+                      <div class="col-sm-10">
+                        <div class="mb-2">
+                          <button type="button" class="btn btn-sm btn-outline-primary toggle-editor-mode" data-lang-id="{{ language.language_id }}" data-mode="wysiwyg">
+                            <i class="fa-solid fa-code"></i> 切换到文本模式
+                          </button>
+                          <small class="text-muted ms-2">当前模式：<span class="editor-mode-text" data-lang-id="{{ language.language_id }}">解析源码（富文本编辑）</span></small>
+                        </div>
+                        
+                        {# 富文本编辑器（默认显示） #}
+                        <div id="input-description-wysiwyg-{{ language.language_id }}" class="editor-wysiwyg" data-lang-id="{{ language.language_id }}">
+                          <div id="input-description-{{ language.language_id }}" data-oc-toggle="ckeditor" data-lang="{{ ckeditor }}" style="height: 300px;">{{ duobao_description[language.language_id].description }}</div>
+                        </div>
+                        
+                        {# 文本模式（显示HTML源码，默认隐藏） #}
+                        <div id="input-description-text-{{ language.language_id }}" class="editor-text" data-lang-id="{{ language.language_id }}" style="display: none;">
+                          <textarea class="form-control" rows="15" id="input-description-textarea-{{ language.language_id }}" style="font-family: monospace;">{{ duobao_description[language.language_id].description }}</textarea>
+                        </div>
+                        
+                        {# 隐藏的提交字段 #}
+                        <textarea name="duobao_description[{{ language.language_id }}][description]" style="display: none;" id="input-description-data-{{ language.language_id }}">{{ duobao_description[language.language_id].description }}</textarea>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div id="tab-data" class="tab-pane fade">
+              <div class="row mb-3 required">
+                <label for="input-product" class="col-sm-2 col-form-label">{{ entry_product }}</label>
+                <div class="col-sm-10">
+                  <div class="input-group">
+                    <input type="text" name="product_name" value="{{ product_name }}" placeholder="{{ entry_product }}" id="input-product" data-oc-target="autocomplete-product" class="form-control" autocomplete="off"/>
+                    <button type="button" id="button-product-clear" class="btn btn-outline-secondary"><i class="fa-regular fa-circle-xmark"></i></button>
+                  </div>
+                  <input type="hidden" name="product_id" value="{{ product_id }}" id="input-product-id"/>
+                  <ul id="autocomplete-product" class="dropdown-menu"></ul>
+                  <div id="error-product" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label for="input-issue-no" class="col-sm-2 col-form-label">{{ entry_issue_no }}</label>
+                <div class="col-sm-4">
+                  <input type="number" name="issue_no" value="{{ issue_no }}" placeholder="{{ entry_issue_no }}" id="input-issue-no" class="form-control" min="1"/>
+                  <div id="error-issue_no" class="invalid-feedback"></div>
+                </div>
+                <label for="input-price" class="col-sm-2 col-form-label">{{ entry_price }}</label>
+                <div class="col-sm-4">
+                  <input type="number" step="0.01" name="price" value="{{ price }}" placeholder="{{ entry_price }}" id="input-price" class="form-control" min="0"/>
+                  <div id="error-price" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label for="input-total-slots" class="col-sm-2 col-form-label">{{ entry_total_slots }}</label>
+                <div class="col-sm-4">
+                  <input type="number" name="total_slots" value="{{ total_slots }}" placeholder="{{ entry_total_slots }}" id="input-total-slots" class="form-control" min="1"/>
+                  <div id="error-total_slots" class="invalid-feedback"></div>
+                </div>
+                <label for="input-joined-slots" class="col-sm-2 col-form-label">{{ entry_joined_slots }}</label>
+                <div class="col-sm-4">
+                  <input type="number" name="joined_slots" value="{{ joined_slots }}" placeholder="{{ entry_joined_slots }}" id="input-joined-slots" class="form-control" min="0"/>
+                  <div id="error-joined_slots" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label for="input-start-time" class="col-sm-2 col-form-label">{{ entry_start_time }}</label>
+                <div class="col-sm-4">
+                  <input type="datetime-local" name="start_time" value="{{ start_time }}" id="input-start-time" class="form-control"/>
+                  <div id="error-start_time" class="invalid-feedback"></div>
+                </div>
+                <label for="input-end-time" class="col-sm-2 col-form-label">{{ entry_end_time }}</label>
+                <div class="col-sm-4">
+                  <input type="datetime-local" name="end_time" value="{{ end_time }}" id="input-end-time" class="form-control"/>
+                  <div id="error-end_time" class="invalid-feedback"></div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label for="input-status" class="col-sm-2 col-form-label">{{ entry_status }}</label>
+                <div class="col-sm-4">
+                  <select name="status" id="input-status" class="form-select">
+                    {% for status_code, status_label in status_options %}
+                      <option value="{{ status_code }}"{% if status == status_code %} selected{% endif %}>{{ status_label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div id="tab-robot" class="tab-pane fade">
+              <div class="alert alert-info"><i class="fa-solid fa-info-circle"></i> {{ text_robot_config_help }}</div>
+              
+              <div class="row mb-3">
+                <label for="input-robot-enabled" class="col-sm-2 col-form-label">{{ entry_robot_enabled }}</label>
+                <div class="col-sm-4">
+                  <select name="robot_enabled" id="input-robot-enabled" class="form-select">
+                    <option value="0"{% if not robot_enabled %} selected{% endif %}>{{ text_robot_disabled }}</option>
+                    <option value="1"{% if robot_enabled %} selected{% endif %}>{{ text_robot_enabled }}</option>
+                  </select>
+                </div>
+                <label for="input-robot-target" class="col-sm-2 col-form-label">{{ entry_robot_target }}</label>
+                <div class="col-sm-4">
+                  <input type="number" name="robot_target_percent" value="{{ robot_target_percent }}" placeholder="80" id="input-robot-target" class="form-control" min="1" max="100" step="1"/>
+                  <small class="form-text text-muted">{{ entry_robot_target_help }}</small>
+                  <div id="error-robot_target" class="invalid-feedback"></div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="input-auto-draw-type" class="col-sm-2 col-form-label">{{ entry_auto_draw_type }}</label>
+                <div class="col-sm-10">
+                  <select name="auto_draw_type" id="input-auto-draw-type" class="form-select">
+                    <option value=""{% if not auto_draw_type %} selected{% endif %}>-- 手动派奖 --</option>
+                    <option value="real"{% if auto_draw_type == 'real' %} selected{% endif %}>{{ text_auto_draw_real }}</option>
+                    <option value="robot"{% if auto_draw_type == 'robot' %} selected{% endif %}>{{ text_auto_draw_robot }}</option>
+                    <option value="random"{% if auto_draw_type == 'random' %} selected{% endif %}>{{ text_auto_draw_random }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <hr>
+
+              <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">{{ entry_robot_schedules }}</label>
+                <div class="col-sm-10">
+                  <div id="robot-schedules-container">
+                    {% set schedule_row = 0 %}
+                    {% if robot_schedules %}
+                      {% for schedule in robot_schedules %}
+                        <div class="robot-schedule-row mb-3" data-schedule-row="{{ schedule_row }}">
+                          <div class="card">
+                            <div class="card-body">
+                              <div class="row mb-2">
+                                <div class="col-md-6">
+                                  <label>{{ entry_schedule_time }}</label>
+                                  <div class="input-group">
+                                    <input type="datetime-local" name="robot_schedules[{{ schedule_row }}][start_time]" value="{{ schedule.start_time }}" class="form-control" placeholder="开始时间"/>
+                                    <span class="input-group-text">至</span>
+                                    <input type="datetime-local" name="robot_schedules[{{ schedule_row }}][end_time]" value="{{ schedule.end_time }}" class="form-control" placeholder="结束时间"/>
+                                  </div>
+                                </div>
+                                <div class="col-md-3">
+                                  <label>{{ entry_schedule_target }}</label>
+                                  <input type="number" name="robot_schedules[{{ schedule_row }}][target_percent]" value="{{ schedule.target_percent }}" class="form-control" min="1" max="100" placeholder="70"/>
+                                </div>
+                                <div class="col-md-3">
+                                  <label>&nbsp;</label>
+                                  <button type="button" class="btn btn-danger w-100 remove-schedule-btn"><i class="fa-solid fa-minus-circle"></i> 删除</button>
+                                </div>
+                              </div>
+                              <div class="row">
+                                <div class="col-md-6">
+                                  <label>{{ entry_schedule_quantity }} (min - max)</label>
+                                  <div class="input-group">
+                                    <input type="number" name="robot_schedules[{{ schedule_row }}][quantity_min]" value="{{ schedule.quantity_min }}" class="form-control" min="1" placeholder="1"/>
+                                    <span class="input-group-text">-</span>
+                                    <input type="number" name="robot_schedules[{{ schedule_row }}][quantity_max]" value="{{ schedule.quantity_max }}" class="form-control" min="1" placeholder="5"/>
+                                  </div>
+                                </div>
+                                <div class="col-md-6">
+                                  <label>{{ entry_schedule_interval }} (min - max)</label>
+                                  <div class="input-group">
+                                    <input type="number" name="robot_schedules[{{ schedule_row }}][interval_min]" value="{{ schedule.interval_min }}" class="form-control" min="5" placeholder="30"/>
+                                    <span class="input-group-text">-</span>
+                                    <input type="number" name="robot_schedules[{{ schedule_row }}][interval_max]" value="{{ schedule.interval_max }}" class="form-control" min="5" placeholder="120"/>
+                                  </div>
+                                </div>
+                              </div>
+                              <input type="hidden" name="robot_schedules[{{ schedule_row }}][schedule_id]" value="{{ schedule.schedule_id }}"/>
+                            </div>
+                          </div>
+                        </div>
+                        {% set schedule_row = schedule_row + 1 %}
+                      {% endfor %}
+                    {% endif %}
+                  </div>
+                  <button type="button" id="add-schedule-btn" class="btn btn-success"><i class="fa-solid fa-plus-circle"></i> {{ text_add_schedule }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript"><!--
+$('#input-product').autocomplete({
+    'source': function(request, response) {
+        $.ajax({
+            url: 'index.php?route=catalog/product.autocomplete&user_token={{ user_token }}&filter_name=' + encodeURIComponent(request),
+            dataType: 'json',
+            success: function(json) {
+                response($.map(json, function(item) {
+                    return {
+                        label: item['name'],
+                        value: item['product_id']
+                    }
+                }));
+            }
+        });
+    },
+    'select': function(item) {
+        $('#input-product').val(decodeHTMLEntities(item['label']));
+        $('#input-product-id').val(item['value']);
+    }
+});
+
+$('#button-product-clear').on('click', function() {
+    $('#input-product').val('');
+    $('#input-product-id').val('0');
+});
+
+// 机器人时间段管理
+var schedule_row = {{ robot_schedules|length }};
+
+$('#add-schedule-btn').on('click', function() {
+    var html = '<div class="robot-schedule-row mb-3" data-schedule-row="' + schedule_row + '">';
+    html += '  <div class="card">';
+    html += '    <div class="card-body">';
+    html += '      <div class="row mb-2">';
+    html += '        <div class="col-md-6">';
+    html += '          <label>{{ entry_schedule_time }}</label>';
+    html += '          <div class="input-group">';
+    html += '            <input type="datetime-local" name="robot_schedules[' + schedule_row + '][start_time]" value="" class="form-control" placeholder="开始时间"/>';
+    html += '            <span class="input-group-text">至</span>';
+    html += '            <input type="datetime-local" name="robot_schedules[' + schedule_row + '][end_time]" value="" class="form-control" placeholder="结束时间"/>';
+    html += '          </div>';
+    html += '        </div>';
+    html += '        <div class="col-md-3">';
+    html += '          <label>{{ entry_schedule_target }}</label>';
+    html += '          <input type="number" name="robot_schedules[' + schedule_row + '][target_percent]" value="70" class="form-control" min="1" max="100" placeholder="70"/>';
+    html += '        </div>';
+    html += '        <div class="col-md-3">';
+    html += '          <label>&nbsp;</label>';
+    html += '          <button type="button" class="btn btn-danger w-100 remove-schedule-btn"><i class="fa-solid fa-minus-circle"></i> 删除</button>';
+    html += '        </div>';
+    html += '      </div>';
+    html += '      <div class="row">';
+    html += '        <div class="col-md-6">';
+    html += '          <label>{{ entry_schedule_quantity }} (min - max)</label>';
+    html += '          <div class="input-group">';
+    html += '            <input type="number" name="robot_schedules[' + schedule_row + '][quantity_min]" value="1" class="form-control" min="1" placeholder="1"/>';
+    html += '            <span class="input-group-text">-</span>';
+    html += '            <input type="number" name="robot_schedules[' + schedule_row + '][quantity_max]" value="5" class="form-control" min="1" placeholder="5"/>';
+    html += '          </div>';
+    html += '        </div>';
+    html += '        <div class="col-md-6">';
+    html += '          <label>{{ entry_schedule_interval }} (min - max)</label>';
+    html += '          <div class="input-group">';
+    html += '            <input type="number" name="robot_schedules[' + schedule_row + '][interval_min]" value="30" class="form-control" min="5" placeholder="30"/>';
+    html += '            <span class="input-group-text">-</span>';
+    html += '            <input type="number" name="robot_schedules[' + schedule_row + '][interval_max]" value="120" class="form-control" min="5" placeholder="120"/>';
+    html += '          </div>';
+    html += '        </div>';
+    html += '      </div>';
+    html += '      <input type="hidden" name="robot_schedules[' + schedule_row + '][schedule_id]" value="0"/>';
+    html += '    </div>';
+    html += '  </div>';
+    html += '</div>';
+    
+    $('#robot-schedules-container').append(html);
+    schedule_row++;
+});
+
+$(document).on('click', '.remove-schedule-btn', function() {
+    $(this).closest('.robot-schedule-row').remove();
+});
+
+// 编辑器模式切换功能
+$(document).ready(function() {
+    // 切换按钮点击事件
+    $(document).on('click', '.toggle-editor-mode', function() {
+        var langId = $(this).data('lang-id');
+        var currentMode = $(this).data('mode');
+        var $button = $(this);
+        var $modeText = $('.editor-mode-text[data-lang-id="' + langId + '"]');
+        var $wysiwygContainer = $('#input-description-wysiwyg-' + langId);
+        var $textContainer = $('#input-description-text-' + langId);
+        var $textarea = $('#input-description-textarea-' + langId);
+        var $dataField = $('#input-description-data-' + langId);
+        
+        if (currentMode === 'wysiwyg') {
+            // 切换到文本模式
+            // 从CKEditor获取内容
+            if (window.CKEDITOR && CKEDITOR.instances['input-description-' + langId]) {
+                var content = CKEDITOR.instances['input-description-' + langId].getData();
+                $textarea.val(content);
+                $dataField.val(content);
+            }
+            
+            // 隐藏富文本编辑器，显示文本框
+            $wysiwygContainer.hide();
+            $textContainer.show();
+            
+            // 更新按钮和提示
+            $button.html('<i class="fa-solid fa-eye"></i> 切换到富文本模式');
+            $button.removeClass('btn-outline-primary').addClass('btn-outline-secondary');
+            $button.data('mode', 'text');
+            $modeText.text('解析文本（显示HTML源码）');
+            
+        } else {
+            // 切换到富文本模式
+            // 从文本框获取内容
+            var content = $textarea.val();
+            $dataField.val(content);
+            
+            // 更新CKEditor内容
+            if (window.CKEDITOR && CKEDITOR.instances['input-description-' + langId]) {
+                CKEDITOR.instances['input-description-' + langId].setData(content);
+            }
+            
+            // 隐藏文本框，显示富文本编辑器
+            $textContainer.hide();
+            $wysiwygContainer.show();
+            
+            // 更新按钮和提示
+            $button.html('<i class="fa-solid fa-code"></i> 切换到文本模式');
+            $button.removeClass('btn-outline-secondary').addClass('btn-outline-primary');
+            $button.data('mode', 'wysiwyg');
+            $modeText.text('解析源码（富文本编辑）');
+        }
+    });
+    
+    // 文本模式下的textarea变化时同步到隐藏字段
+    $(document).on('input', '[id^="input-description-textarea-"]', function() {
+        var langId = $(this).attr('id').replace('input-description-textarea-', '');
+        var content = $(this).val();
+        $('#input-description-data-' + langId).val(content);
+    });
+    
+    // 表单提交前确保数据同步
+    $('form').on('submit', function() {
+        $('.toggle-editor-mode').each(function() {
+            var langId = $(this).data('lang-id');
+            var currentMode = $(this).data('mode');
+            var $dataField = $('#input-description-data-' + langId);
+            
+            if (currentMode === 'wysiwyg') {
+                // 从CKEditor同步
+                if (window.CKEDITOR && CKEDITOR.instances['input-description-' + langId]) {
+                    var content = CKEDITOR.instances['input-description-' + langId].getData();
+                    $dataField.val(content);
+                }
+            } else {
+                // 从textarea同步
+                var content = $('#input-description-textarea-' + langId).val();
+                $dataField.val(content);
+            }
+        });
+    });
+});
+
+// HTML实体解码函数
+function decodeHTMLEntities(text) {
+    if (!text || typeof text !== 'string') {
+        return text;
+    }
+    
+    var textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+}
+
+// 商品选择器功能
+$(document).ready(function() {
+    var selectedProduct = null;
+    
+    // 加载分类和商品
+    $('#modal-product-selector').on('shown.bs.modal', function() {
+        if (!$('#product-selector-content').data('loaded')) {
+            loadCategories();
+            $('#product-selector-content').data('loaded', true);
+        }
+    });
+    
+    // 加载分类列表
+    function loadCategories() {
+        $('#product-selector-content').html('<div class="text-center p-4"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br>加载分类中...</div>');
+        
+        $.ajax({
+            url: 'index.php?route=catalog/duobao.getCategoriesForSelector&user_token={{ user_token }}',
+            type: 'get',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success === false) {
+                    console.error('加载分类失败:', response.error);
+                    $('#product-selector-content').html('<div class="alert alert-danger"><i class="fa-solid fa-exclamation-triangle"></i> ' + (response.error || '加载分类失败') + '</div>');
+                    return;
+                }
+                
+                var html = '<div class="list-group">';
+                html += '<a href="#" class="list-group-item list-group-item-action active" data-category-id="0" data-page="1"><i class="fa-solid fa-home"></i> 所有商品</a>';
+                
+                var categories = response.categories || [];
+                
+                if (categories.length > 0) {
+                    categories.forEach(function(category) {
+                        html += '<a href="#" class="list-group-item list-group-item-action" data-category-id="' + category.category_id + '" data-page="1">';
+                        html += '<i class="fa-solid fa-folder"></i> ' + (category.name || category.category_name || 'Category ' + category.category_id);
+                        html += '</a>';
+                    });
+                }
+                
+                html += '</div>';
+                $('#product-selector-content').html(html);
+                
+                // 自动加载所有商品
+                loadProducts(0, 1);
+            },
+            error: function(xhr, status, error) {
+                console.error('加载分类失败:', status, error);
+                var errorMsg = '网络错误，请检查连接';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                $('#product-selector-content').html('<div class="alert alert-danger"><i class="fa-solid fa-exclamation-triangle"></i> ' + errorMsg + '<br><button type="button" class="btn btn-sm btn-primary mt-2" onclick="location.reload()">刷新页面</button></div>');
+            }
+        });
+    }
+    
+    // 点击分类加载商品
+    $(document).on('click', '#product-selector-content .list-group-item', function(e) {
+        e.preventDefault();
+        var categoryId = $(this).data('category-id');
+        var page = $(this).data('page') || 1;
+        
+        // 保存当前选中的分类
+        $('#product-selector-content .list-group-item').data('current-category', categoryId);
+        
+        loadProducts(categoryId, page);
+        
+        // 高亮当前选中的分类
+        $('#product-selector-content .list-group-item').removeClass('active');
+        $(this).addClass('active');
+    });
+    
+    // 加载商品列表（添加分页）
+    function loadProducts(categoryId, page) {
+        page = page || 1;
+        var limit = 20; // 每页显示20个商品
+        var start = (page - 1) * limit;
+        
+        $('#product-list-content').html('<div class="text-center p-4"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br>加载商品中...</div>');
+        
+        var url = 'index.php?route=catalog/duobao.getProductsForSelector&user_token={{ user_token }}&start=' + start + '&limit=' + limit;
+        if (categoryId > 0) {
+            url += '&filter_category_id=' + categoryId;
+        }
+        
+        // 添加搜索关键词
+        var searchKeyword = $('#product-search-input').val();
+        if (searchKeyword) {
+            url += '&filter_name=' + encodeURIComponent(searchKeyword);
+        }
+        
+        $.ajax({
+            url: url,
+            type: 'get',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success === false) {
+                    var html = '<div class="alert alert-danger"><i class="fa-solid fa-exclamation-triangle"></i> ' + (response.error || '加载商品失败') + '</div>';
+                    $('#product-list-content').html(html);
+                    return;
+                }
+                
+                var products = response.products || [];
+                var total = response.product_total || products.length;
+                
+                if (products && products.length > 0) {
+                    var html = '<div class="mb-3">';
+                    html += '<div class="input-group">';
+                    html += '<input type="text" class="form-control" id="product-search-input" placeholder="搜索商品名称..." value="' + (searchKeyword || '') + '">';
+                    html += '<button type="button" class="btn btn-primary" id="product-search-btn"><i class="fa-solid fa-search"></i> 搜索</button>';
+                    html += '</div>';
+                    html += '<small class="text-muted">共找到 ' + total + ' 个商品</small>';
+                    html += '</div>';
+                    
+                    html += '<div class="table-responsive"><table class="table table-hover table-sm">';
+                    html += '<thead><tr><th width="60">ID</th><th>名称</th><th width="100">型号</th><th width="80">价格</th><th width="80">操作</th></tr></thead><tbody>';
+                    
+                    products.forEach(function(product) {
+                        var productId = product.product_id || product.id;
+                        var productName = product.name || product.product_name || 'Product ' + productId;
+                        var productModel = product.model || '-';
+                        var productPrice = product.price || '-';
+                        
+                        html += '<tr>';
+                        html += '<td>' + productId + '</td>';
+                        html += '<td><div class="text-truncate" style="max-width: 250px;" title="' + productName + '">' + productName + '</div></td>';
+                        html += '<td>' + productModel + '</td>';
+                        html += '<td>' + productPrice + '</td>';
+                        html += '<td><button type="button" class="btn btn-sm btn-success select-product-btn" data-product-id="' + productId + '">选择</button></td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '</tbody></table></div>';
+                    
+                    // 添加分页
+                    var totalPages = Math.ceil(total / limit);
+                    if (totalPages > 1) {
+                        html += '<nav><ul class="pagination pagination-sm justify-content-center">';
+                        
+                        // 上一页
+                        if (page > 1) {
+                            html += '<li class="page-item"><a class="page-link product-page-link" href="#" data-page="' + (page - 1) + '" data-category-id="' + categoryId + '">« 上一页</a></li>';
+                        }
+                        
+                        // 页码
+                        var startPage = Math.max(1, page - 2);
+                        var endPage = Math.min(totalPages, page + 2);
+                        
+                        if (startPage > 1) {
+                            html += '<li class="page-item"><a class="page-link product-page-link" href="#" data-page="1" data-category-id="' + categoryId + '">1</a></li>';
+                            if (startPage > 2) {
+                                html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                            }
+                        }
+                        
+                        for (var i = startPage; i <= endPage; i++) {
+                            if (i === page) {
+                                html += '<li class="page-item active"><span class="page-link">' + i + '</span></li>';
+                            } else {
+                                html += '<li class="page-item"><a class="page-link product-page-link" href="#" data-page="' + i + '" data-category-id="' + categoryId + '">' + i + '</a></li>';
+                            }
+                        }
+                        
+                        if (endPage < totalPages) {
+                            if (endPage < totalPages - 1) {
+                                html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                            }
+                            html += '<li class="page-item"><a class="page-link product-page-link" href="#" data-page="' + totalPages + '" data-category-id="' + categoryId + '">' + totalPages + '</a></li>';
+                        }
+                        
+                        // 下一页
+                        if (page < totalPages) {
+                            html += '<li class="page-item"><a class="page-link product-page-link" href="#" data-page="' + (page + 1) + '" data-category-id="' + categoryId + '">下一页 »</a></li>';
+                        }
+                        
+                        html += '</ul></nav>';
+                    }
+                    
+                    $('#product-list-content').html(html);
+                } else {
+                    var html = '<div class="mb-3">';
+                    html += '<div class="input-group">';
+                    html += '<input type="text" class="form-control" id="product-search-input" placeholder="搜索商品名称...">';
+                    html += '<button type="button" class="btn btn-primary" id="product-search-btn"><i class="fa-solid fa-search"></i> 搜索</button>';
+                    html += '</div>';
+                    html += '</div>';
+                    html += '<div class="alert alert-info"><i class="fa-solid fa-info-circle"></i> 没有找到商品</div>';
+                    $('#product-list-content').html(html);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('加载商品失败:', error);
+                $('#product-list-content').html('<div class="alert alert-danger">加载失败，请重试</div>');
+            }
+        });
+    }
+    
+    // 分页点击
+    $(document).on('click', '.product-page-link', function(e) {
+        e.preventDefault();
+        var page = $(this).data('page');
+        var categoryId = $(this).data('category-id');
+        loadProducts(categoryId, page);
+    });
+    
+    // 搜索按钮
+    $(document).on('click', '#product-search-btn', function() {
+        var categoryId = $('#product-selector-content .list-group-item.active').data('category-id') || 0;
+        loadProducts(categoryId, 1);
+    });
+    
+    // 搜索框回车
+    $(document).on('keypress', '#product-search-input', function(e) {
+        if (e.which === 13) {
+            $('#product-search-btn').click();
+        }
+    });
+    
+    // 选择商品
+    $(document).on('click', '.select-product-btn', function() {
+        var productId = $(this).data('product-id');
+        loadProductDetails(productId);
+    });
+    
+    // 加载商品详情并填充表单
+    function loadProductDetails(productId) {
+        // 显示加载提示
+        var $btn = $('.select-product-btn[data-product-id="' + productId + '"]');
+        $btn.html('<i class="fa-solid fa-spinner fa-spin"></i>').prop('disabled', true);
+        
+        $.ajax({
+            url: 'index.php?route=catalog/duobao.getProductDetailsForSelector&user_token={{ user_token }}&product_id=' + productId,
+            type: 'get',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success === false) {
+                    alert('⚠️ ' + (response.error || '加载商品详情失败'));
+                    $btn.html('选择').prop('disabled', false);
+                    return;
+                }
+                
+                var product = response.product || response;
+                
+                if (product && (product.product_id || product.name)) {
+                    // 填充商品ID和名称
+                    $('#input-product-id').val(product.product_id || productId);
+                    $('#input-product').val(product.name || product.product_name || '');
+                    
+                    // 获取商品描述（可能有多语言）
+                    var descriptions = product.product_description || {};
+                    
+                    // 填充所有语言的标题和描述
+                    $('input[name^="duobao_description"]').each(function() {
+                        var fieldName = $(this).attr('name');
+                        // 提取语言ID
+                        var langMatch = fieldName.match(/\[(\d+)\]/);
+                        var langId = langMatch ? langMatch[1] : null;
+                        var langDesc = langId && descriptions[langId] ? descriptions[langId] : null;
+                        
+                        if (fieldName.indexOf('[title]') > -1) {
+                            var value = (langDesc && langDesc.name) || product.name || product.product_name || '';
+                            $(this).val(value);
+                        }
+                        if (fieldName.indexOf('[sub_title]') > -1) {
+                            var value = (langDesc && langDesc.name) || product.name || product.product_name || '';
+                            $(this).val(value);
+                        }
+                        if (fieldName.indexOf('[meta_title]') > -1) {
+                            var value = (langDesc && langDesc.meta_title) || (langDesc && langDesc.name) || product.name || '';
+                            $(this).val(value);
+                        }
+                    });
+                    
+                    $('textarea[name^="duobao_description"]').each(function() {
+                        var fieldName = $(this).attr('name');
+                        var langMatch = fieldName.match(/\[(\d+)\]/);
+                        var langId = langMatch ? langMatch[1] : null;
+                        var langDesc = langId && descriptions[langId] ? descriptions[langId] : null;
+                        
+                        if (fieldName.indexOf('[description]') > -1) {
+                            var value = (langDesc && langDesc.description) || product.description || '';
+                            // 解码HTML实体（如果有的话）
+                            value = decodeHTMLEntities(value);
+                            $(this).val(value);
+                        }
+                        if (fieldName.indexOf('[meta_description]') > -1) {
+                            var value = (langDesc && langDesc.meta_description) || product.meta_description || '';
+                            $(this).val(value);
+                        }
+                        if (fieldName.indexOf('[meta_keyword]') > -1) {
+                            var value = (langDesc && langDesc.meta_keyword) || product.meta_keyword || '';
+                            $(this).val(value);
+                        }
+                    });
+                    
+                    // 关闭模态框
+                    $('#modal-product-selector').modal('hide');
+                    
+                    // 提示用户
+                    alert('✅ 商品信息已同步！\n\n商品：' + (product.name || product.product_name) + '\n\n已自动填充：\n• 标题\n• 副标题\n• SEO标题\n• 描述\n• SEO描述\n• SEO关键字\n\n请检查并根据需要调整');
+                } else {
+                    alert('⚠️ 未能获取商品详细信息，请重试');
+                    $btn.html('选择').prop('disabled', false);
+                }
+            },
+            error: function() {
+                alert('加载商品详情失败，请重试');
+                $btn.html('选择').prop('disabled', false);
+            }
+        });
+    }
+    
+    // 模态框关闭时重置
+    $('#modal-product-selector').on('hidden.bs.modal', function() {
+        $('#product-search-input').val('');
+        $('#product-selector-content').data('loaded', false);
+    });
+});
+
+// 导入配置填充函数（期次规格 + 机器人配置）
+function fillFormWithConfig(config) {
+    try {
+        // ⚠️ 注意：自动填充期次规格和机器人配置，请在保存前核对时间与人次
+
+        var normalizeDateTime = function(value) {
+            if (!value) {
+                return '';
+            }
+            if (value.indexOf('T') !== -1) {
+                return value.slice(0, 16);
+            }
+            return value.replace(' ', 'T').slice(0, 16);
+        };
+
+        // 同步商品信息
+        if (config.product) {
+            if (typeof config.product.product_name !== 'undefined') {
+                $('input[name="product_name"]').val(config.product.product_name || '');
+            }
+            if (typeof config.product.product_id !== 'undefined') {
+                $('input[name="product_id"]').val(config.product.product_id || '');
+            }
+        }
+
+        // 填充期次规格
+        if (config.issue) {
+            var issue = config.issue;
+            if (typeof issue.issue_no !== 'undefined') {
+                $('input[name="issue_no"]').val(issue.issue_no);
+            }
+            if (typeof issue.price !== 'undefined') {
+                $('input[name="price"]').val(issue.price);
+            }
+            if (typeof issue.total_slots !== 'undefined') {
+                $('input[name="total_slots"]').val(issue.total_slots);
+            }
+            if (typeof issue.joined_slots !== 'undefined') {
+                $('input[name="joined_slots"]').val(issue.joined_slots);
+            }
+            if (issue.start_time) {
+                $('input[name="start_time"]').val(normalizeDateTime(issue.start_time));
+            }
+            if (issue.end_time) {
+                $('input[name="end_time"]').val(normalizeDateTime(issue.end_time));
+            }
+            if (issue.status) {
+                $('select[name="status"]').val(issue.status);
+            }
+        }
+
+        // 填充机器人配置
+        if (config.robot) {
+            // 启用状态（默认false）
+            var enabled = config.robot.enabled || false;
+            $('input[name="robot_enabled"]').prop('checked', enabled);
+            
+            // 目标百分比（默认80）
+            var targetPercent = config.robot.target_percent || 80;
+            $('input[name="robot_target_percent"]').val(targetPercent);
+            
+            // 填充自动派奖类型（默认random）
+            var autoDrawType = config.robot.auto_draw_type || 'random';
+            $('select[name="auto_draw_type"]').val(autoDrawType);
+            
+            // 清空现有的时间段
+            $('#robot-schedules-container').empty();
+            schedule_row = 0;
+            
+            // 添加导入的时间段
+            if (config.robot.schedules && Array.isArray(config.robot.schedules) && config.robot.schedules.length > 0) {
+                config.robot.schedules.forEach(function(schedule) {
+                    // 使用默认值确保所有字段都有值
+                    var startTime = schedule.start_time || '';
+                    var endTime = schedule.end_time || '';
+                    var targetPercent = schedule.target_percent || 70;
+                    var quantityMin = schedule.quantity_min || 1;
+                    var quantityMax = schedule.quantity_max || 5;
+                    var intervalMin = schedule.interval_min || 30;
+                    var intervalMax = schedule.interval_max || 120;
+                    
+                    var html = '<div class="robot-schedule-row mb-3" data-schedule-row="' + schedule_row + '">';
+                    html += '  <div class="card">';
+                    html += '    <div class="card-body">';
+                    html += '      <div class="row mb-2">';
+                    html += '        <div class="col-md-6">';
+                    html += '          <label>{{ entry_schedule_time }}</label>';
+                    html += '          <div class="input-group">';
+                    html += '            <input type="datetime-local" name="robot_schedules[' + schedule_row + '][start_time]" value="' + startTime + '" class="form-control" placeholder="开始时间"/>';
+                    html += '            <span class="input-group-text">至</span>';
+                    html += '            <input type="datetime-local" name="robot_schedules[' + schedule_row + '][end_time]" value="' + endTime + '" class="form-control" placeholder="结束时间"/>';
+                    html += '          </div>';
+                    html += '        </div>';
+                    html += '        <div class="col-md-3">';
+                    html += '          <label>{{ entry_schedule_target }}</label>';
+                    html += '          <input type="number" name="robot_schedules[' + schedule_row + '][target_percent]" value="' + targetPercent + '" class="form-control" min="1" max="100" placeholder="70"/>';
+                    html += '        </div>';
+                    html += '        <div class="col-md-3">';
+                    html += '          <label>&nbsp;</label>';
+                    html += '          <button type="button" class="btn btn-danger w-100 remove-schedule-btn"><i class="fa-solid fa-minus-circle"></i> 删除</button>';
+                    html += '        </div>';
+                    html += '      </div>';
+                    html += '      <div class="row">';
+                    html += '        <div class="col-md-6">';
+                    html += '          <label>{{ entry_schedule_quantity }} (min - max)</label>';
+                    html += '          <div class="input-group">';
+                    html += '            <input type="number" name="robot_schedules[' + schedule_row + '][quantity_min]" value="' + quantityMin + '" class="form-control" min="1" placeholder="1"/>';
+                    html += '            <span class="input-group-text">-</span>';
+                    html += '            <input type="number" name="robot_schedules[' + schedule_row + '][quantity_max]" value="' + quantityMax + '" class="form-control" min="1" placeholder="5"/>';
+                    html += '          </div>';
+                    html += '        </div>';
+                    html += '        <div class="col-md-6">';
+                    html += '          <label>{{ entry_schedule_interval }} (min - max)</label>';
+                    html += '          <div class="input-group">';
+                    html += '            <input type="number" name="robot_schedules[' + schedule_row + '][interval_min]" value="' + intervalMin + '" class="form-control" min="5" placeholder="30"/>';
+                    html += '            <span class="input-group-text">-</span>';
+                    html += '            <input type="number" name="robot_schedules[' + schedule_row + '][interval_max]" value="' + intervalMax + '" class="form-control" min="5" placeholder="120"/>';
+                    html += '          </div>';
+                    html += '        </div>';
+                    html += '      </div>';
+                    html += '      <input type="hidden" name="robot_schedules[' + schedule_row + '][schedule_id]" value="0"/>';
+                    html += '    </div>';
+                    html += '  </div>';
+                    html += '</div>';
+                    
+                    $('#robot-schedules-container').append(html);
+                    schedule_row++;
+                });
+            }
+        }
+    } catch (e) {
+        console.error('填充配置时出错:', e);
+        alert('填充配置时出错: ' + e.message);
+    }
+}
+
+// 导入配置自动填充（从列表页跳转）
+$(document).ready(function() {
+    var importConfig = sessionStorage.getItem('import_config');
+    if (importConfig) {
+        try {
+            var config = JSON.parse(importConfig);
+            
+            // 显示提示信息
+            if (confirm('检测到导入的配置数据，是否自动填充表单？\n\n提示：请务必修改活动时间后再保存！')) {
+                fillFormWithConfig(config);
+                
+                // 提示用户修改时间
+                alert('配置已自动填充！\n\n⚠️ 重要提示：\n1. 请修改活动开始/结束时间\n2. 请修改机器人购买时间段\n3. 确认无误后再保存');
+                
+                // 跳转到期次设置标签页
+                $('a[href="#tab-data"]').tab('show');
+            }
+            
+            // 清除sessionStorage
+            sessionStorage.removeItem('import_config');
+            
+        } catch (e) {
+            console.error('导入配置解析失败:', e);
+            sessionStorage.removeItem('import_config');
+        }
+    }
+});
+//--></script>
+
+<!-- 商品选择器模态框 -->
+<div class="modal fade" id="modal-product-selector" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-search"></i> 选择商品并同步信息</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-4">
+            <h6 class="border-bottom pb-2 mb-3"><i class="fa-solid fa-folder-tree"></i> 商品分类</h6>
+            <div id="product-selector-content" style="max-height: 500px; overflow-y: auto;">
+              <div class="text-center p-4">
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                <br>加载中...
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <h6 class="border-bottom pb-2 mb-3"><i class="fa-solid fa-list"></i> 商品列表</h6>
+            <div id="product-list-content" style="max-height: 500px; overflow-y: auto;">
+              <div class="alert alert-info">
+                <i class="fa-solid fa-info-circle"></i> 请先选择左侧的分类查看商品
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑页导入配置模态框 -->
+<div class="modal fade" id="modal-import-edit" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">导入配置到当前活动</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <strong>📋 说明：</strong>
+          <ul class="mb-0">
+            <li><strong>导入内容：</strong>期次规格（期号、人次、价格、时间）+ 机器人配置（启用状态、目标占比、派奖类型、时间段）</li>
+            <li><strong>不会覆盖</strong>标题、副标题、描述等基本信息</li>
+            <li><strong>不会修改</strong>已选择的商品，必要时请手动调整</li>
+            <li>导入后请核对时间、人次与机器人时间段再保存</li>
+          </ul>
+        </div>
+        <div class="mb-3">
+          <label for="import-file-edit" class="form-label">选择配置文件（JSON格式）</label>
+          <input type="file" class="form-control" id="import-file-edit" accept=".json">
+          <small class="form-text text-muted">仅支持从本系统导出的JSON配置文件</small>
+        </div>
+        <div id="import-preview-edit" class="alert alert-info" style="display:none;">
+          <strong>预览：</strong>
+          <div id="import-preview-content-edit"></div>
+        </div>
+        <div id="import-error-edit" class="alert alert-danger" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-do-import-edit" disabled>导入并覆盖</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript"><!--
+// 编辑页导入配置功能
+$(document).ready(function() {
+    var importData = null;
+    
+    // 文件选择
+    $('#import-file-edit').on('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) {
+            $('#btn-do-import-edit').prop('disabled', true);
+            $('#import-preview-edit').hide();
+            $('#import-error-edit').hide();
+            return;
+        }
+        
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                importData = JSON.parse(e.target.result);
+                
+                // 验证数据结构
+                if (!importData.robot || !importData.export_version) {
+                    throw new Error('无效的配置文件格式');
+                }
+                
+                // 显示预览（仅机器人配置）
+                var preview = '<ul class="mb-0">
+            <li><strong>导入内容：</strong>期次规格（期号、人次、价格、时间）+ 机器人配置（启用状态、目标占比、派奖类型、时间段）</li>
+            <li><strong>不会覆盖</strong>标题、副标题、描述等基本信息</li>
+            <li><strong>不会修改</strong>已选择的商品，必要时请手动调整</li>
+            <li>导入后请核对时间、人次与机器人时间段再保存</li>
+          </ul>';
+                
+                $('#import-preview-content-edit').html(preview);
+                $('#import-preview-edit').show();
+                $('#import-error-edit').hide();
+                $('#btn-do-import-edit').prop('disabled', false);
+                
+            } catch (err) {
+                $('#import-error-edit').text('文件解析失败: ' + err.message).show();
+                $('#import-preview-edit').hide();
+                $('#btn-do-import-edit').prop('disabled', true);
+                importData = null;
+            }
+        };
+        reader.readAsText(file);
+    });
+    
+    // 执行导入
+    $('#btn-do-import-edit').on('click', function() {
+        if (!importData) return;
+        
+        if (confirm('确定要导入这个机器人配置吗？\n\n✅ 只会更新机器人配置\n✅ 不会修改基本信息和期次设置\n⚠️ 现有的机器人时间段将被替换')) {
+            fillFormWithConfig(importData);
+            
+            alert('✅ 机器人配置已导入！\n\n📋 已更新内容：\n  • 机器人启用状态\n  • 目标百分比\n  • 自动派奖类型\n  • 购买时间段\n\n💾 请检查时间段设置后点击"保存"按钮');
+            
+            // 跳转到机器人配置标签页
+            $('a[href="#tab-robot"]').tab('show');
+            
+            // 关闭模态框
+            $('#modal-import-edit').modal('hide');
+        }
+    });
+    
+    // 模态框关闭时重置
+    $('#modal-import-edit').on('hidden.bs.modal', function() {
+        $('#import-file-edit').val('');
+        $('#import-preview-edit').hide();
+        $('#import-error-edit').hide();
+        $('#btn-do-import-edit').prop('disabled', true);
+        importData = null;
+    });
+});
+//--></script>
+
+{{ footer }}
+
+

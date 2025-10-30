@@ -1,0 +1,104 @@
+<div class="module-duobao card mb-4" id="lucky-purchase">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="card-title mb-0">{{ heading_title }}</h5>
+    {% if duobaos %}
+    <div class="lucky-controls">
+      <button type="button" class="lucky-control lucky-prev" onclick="luckyScrollPrev()" aria-label="Previous">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button type="button" class="lucky-control lucky-next" onclick="luckyScrollNext()" aria-label="Next">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    {% if duobaos %}
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 g-lg-4" id="lucky-purchase-row">
+      {% for duobao in duobaos %}
+        <div class="col">
+          <div class="duobao-card h-100 shadow-sm">
+            <div class="ratio ratio-4x3 duobao-card__image">
+              <a href="{{ duobao.detail_href }}"><img src="{{ duobao.thumb }}" alt="{{ duobao.title }}" class="img-fluid"/></a>
+            </div>
+            <div class="duobao-body d-flex flex-column gap-2">
+              <h6 class="fw-semibold mb-0 duobao-highlight duobao-title"><a href="{{ duobao.detail_href }}">{{ duobao.title }}</a></h6>
+              {% if duobao.sub_title %}
+                <p class="small mb-0 duobao-highlight duobao-subtitle">{{ duobao.sub_title }}</p>
+              {% endif %}
+              <div class="small duobao-highlight duobao-issue">{{ text_issue_no }} {{ duobao.issue_no }}</div>
+              {% if duobao.price %}
+                <div class="fw-semibold text-danger">{{ duobao.price }}</div>
+              {% endif %}
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ duobao.progress }}%;" aria-valuenow="{{ duobao.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <div class="d-flex justify-content-between small text-muted">
+                <span>{{ text_joined }} {{ duobao.joined_slots }}</span>
+                <span>{{ text_remaining }} {{ duobao.remaining }}</span>
+              </div>
+              <div class="d-flex gap-2">
+                <a href="{{ duobao.detail_href }}" class="btn btn-primary btn-sm align-self-start duobao-cta">{{ button_view }}</a>
+                {% if duobao.product_href %}
+                  <a href="{{ duobao.product_href }}" class="btn btn-outline-secondary btn-sm align-self-start">{{ button_view_product }}</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <div class="duobao-empty text-center py-5 text-muted">{{ text_empty }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// Lucky Purchase 上下页滚动功能
+function luckyScrollPrev() {
+  const container = document.getElementById('lucky-purchase-row');
+  if (container) {
+    const scrollAmount = container.querySelector('.col')?.offsetWidth || 400;
+    container.scrollBy({
+      left: -scrollAmount - 24, // 减去gap的距离
+      behavior: 'smooth'
+    });
+  }
+}
+
+function luckyScrollNext() {
+  const container = document.getElementById('lucky-purchase-row');
+  if (container) {
+    const scrollAmount = container.querySelector('.col')?.offsetWidth || 400;
+    container.scrollBy({
+      left: scrollAmount + 24, // 加上gap的距离
+      behavior: 'smooth'
+    });
+  }
+}
+
+// 根据滚动位置更新按钮状态
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('lucky-purchase-row');
+  const prevBtn = document.querySelector('.lucky-prev');
+  const nextBtn = document.querySelector('.lucky-next');
+  
+  if (container && prevBtn && nextBtn) {
+    function updateButtons() {
+      const isAtStart = container.scrollLeft <= 10;
+      const isAtEnd = container.scrollLeft >= container.scrollWidth - container.clientWidth - 10;
+      
+      prevBtn.disabled = isAtStart;
+      nextBtn.disabled = isAtEnd;
+    }
+    
+    // 初始化按钮状态
+    updateButtons();
+    
+    // 监听滚动事件
+    container.addEventListener('scroll', updateButtons);
+  }
+});
+</script>
+

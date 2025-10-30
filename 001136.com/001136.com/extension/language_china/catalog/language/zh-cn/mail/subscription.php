@@ -1,0 +1,34 @@
+<?php
+// Text
+$_['text_subject']               = '%s - 订阅 %s';
+$_['text_greeting']              = '感谢您对%s商品的兴趣。您的订阅请求已收到，确认付款后将进行处理.';
+$_['text_link']                  = '要查看您的订阅，请单击下面的链接:';
+$_['text_promotion']             = '成功：此订阅已成功添加促销功能!';
+$_['text_subscription_trial']    = '%s每%d%s支付%d次，则  ';
+$_['text_subscription_duration'] = '%s每%d%s支付%d次';
+$_['text_subscription_cancel']   = '%s每%d%s，直到取消';
+$_['text_subscription_detail']   = '订阅详细信息';
+$_['text_instruction']           = '说明书';
+$_['text_orders_id']             = '订单 ID:';
+$_['text_date_added']            = '添加日期:';
+$_['text_order_status']          = '订单状态:';
+$_['text_payment_method']        = '付款方式:';
+$_['text_payment_address']       = '付款地址';
+$_['text_email']                 = 'E-mail:';
+$_['text_telephone']             = '电话:';
+$_['text_ip']                    = 'IP 地址:';
+$_['text_products']              = '商品';
+$_['text_product']               = '商品';
+$_['text_model']                 = '样式';
+$_['text_quantity']              = '量';
+$_['text_price']                 = '价格';
+$_['text_order_total']           = '订单合计';
+$_['text_total']                 = '合计';
+$_['text_comment']               = '您订阅的评论如下:';
+$_['text_description']           = '描述';
+$_['text_day']                   = '天';
+$_['text_week']                  = '周';
+$_['text_semi_month']            = '半个月';
+$_['text_month']                 = '月';
+$_['text_year']                  = '年';
+$_['text_footer']                = '如果您有任何问题，请回复此电子邮件.';

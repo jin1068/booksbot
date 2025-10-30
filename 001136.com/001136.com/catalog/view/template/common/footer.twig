@@ -1,0 +1,138 @@
+﻿</main>
+<footer>
+  <div class="container">
+    {% set info_subset = informations|slice(0, 4) %}
+    <div class="row g-4 footer-links">
+      <div class="col-6 col-lg-3 footer-links__group">
+        <h5>{{ text_information }}</h5>
+        <ul class="list-unstyled">
+          {% for information in info_subset %}
+            <li><a href="{{ information.href }}">{{ information.title }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="col-6 col-lg-3 footer-links__group">
+        <h5>{{ text_service }}</h5>
+        <ul class="list-unstyled">
+          <li><a href="{{ contact }}">{{ text_contact }}</a></li>
+          <li><a href="{{ return }}">{{ text_return }}</a></li>
+          <li><a href="{{ sitemap }}">{{ text_sitemap }}</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-lg-3 footer-links__group">
+        <h5>{{ text_extra }}</h5>
+        <ul class="list-unstyled">
+          <li><a href="{{ manufacturer }}">{{ text_manufacturer }}</a></li>
+          {% if affiliate %}
+            <li><a href="{{ affiliate }}">{{ text_affiliate }}</a></li>
+          {% endif %}
+          <li><a href="{{ special }}">{{ text_special }}</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-lg-3 footer-links__group">
+        <h5>{{ text_account }}</h5>
+        <ul class="list-unstyled">
+          <li><a href="{{ account }}">{{ text_account }}</a></li>
+          <li><a href="{{ order }}">{{ text_order }}</a></li>
+          <li><a href="{{ wishlist }}">{{ text_wishlist }}</a></li>
+          <li><a href="{{ newsletter }}">{{ text_newsletter }}</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr>
+    <p>{{ powered }}</p>
+  </div>
+</footer>
+</div>
+{{ cookie }}
+<script src="{{ bootstrap }}" type="text/javascript"></script>
+{% for script in scripts %}
+  <script src="{{ script.href }}" type="text/javascript"></script>
+{% endfor %}
+
+<button id="tawk-launcher" class="chat-launcher" type="button">
+  {{ text_customer_service }}
+</button>
+
+<style>
+  .chat-launcher {
+    position: fixed;
+    right: 18px;
+    bottom: 22px;
+    z-index: 1050;
+    border: none;
+    border-radius: 999px;
+    padding: 0.65rem 1.4rem;
+    background: #217C9B;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 12px 24px rgba(33, 124, 155, 0.35);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  }
+  .chat-launcher:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(33, 124, 155, 0.45);
+  }
+  @media (max-width: 575.98px) {
+    .chat-launcher {
+      right: 12px;
+      bottom: 16px;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+Tawk_API.customStyle = {
+  visibility : {
+    desktop : {
+      position : 'br',
+      xOffset : 0,
+      yOffset : 0
+    },
+    mobile : {
+      position : 'br',
+      xOffset : 0,
+      yOffset : 0
+    },
+    bubble : {
+      rotate : '0deg',
+      xOffset : -1000,
+      yOffset : 0
+    }
+  }
+};
+Tawk_API.onLoad = function(){
+  Tawk_API.hideWidget();
+};
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/68feed3053271d1951463048/1j8hst22e';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
+
+<script type="text/javascript">
+// Customer service launcher button click event
+(function() {
+  var launcher = document.getElementById('tawk-launcher');
+  if (!launcher) {
+    return;
+  }
+
+  launcher.addEventListener('click', function() {
+    if (window.Tawk_API && typeof window.Tawk_API.maximize === 'function') {
+      window.Tawk_API.maximize();
+    }
+  });
+})();
+</script>
+</body></html>

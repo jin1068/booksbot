@@ -1,0 +1,134 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="submit" form="form-duobao-draw" data-bs-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+        <a href="{{ back }}" data-bs-toggle="tooltip" title="{{ button_back }}" class="btn btn-light"><i class="fa-solid fa-reply"></i></a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header"><i class="fa-solid fa-award"></i> {{ text_draw }}</div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <label class="col-sm-2 col-form-label">{{ entry_title }}</label>
+          <div class="col-sm-10 pt-2">{{ duobao.title }}</div>
+        </div>
+        <div class="row mb-3">
+          <label class="col-sm-2 col-form-label">{{ entry_product }}</label>
+          <div class="col-sm-10 pt-2">{{ duobao.product_name }}</div>
+        </div>
+        <form id="form-duobao-draw" action="{{ action }}" method="post" data-oc-toggle="ajax">
+          <input type="hidden" name="duobao_id" value="{{ duobao.duobao_id }}"/>
+          <input type="hidden" name="issue_id" value="{{ duobao.issue_id }}"/>
+          <div class="row mb-3">
+            <label for="input-status" class="col-sm-2 col-form-label">{{ entry_status }}</label>
+            <div class="col-sm-4">
+              <select name="status" id="input-status" class="form-select">
+                {% for status_code, status_label in status_options %}
+                  <option value="{{ status_code }}"{% if duobao.status == status_code %} selected{% endif %}>{{ status_label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <label for="input-winner-customer" class="col-sm-2 col-form-label">{{ entry_winner_customer }}</label>
+            <div class="col-sm-4">
+              <input type="number" name="winner_customer_id" value="{{ duobao.winner_customer_id }}" placeholder="{{ entry_winner_customer }}" id="input-winner-customer" class="form-control" min="0"/>
+            </div>
+            <label for="input-winner-order" class="col-sm-2 col-form-label">{{ entry_winner_order }}</label>
+            <div class="col-sm-4">
+              <input type="number" name="winner_order_id" value="{{ duobao.winner_order_id }}" placeholder="{{ entry_winner_order }}" id="input-winner-order" class="form-control" min="0"/>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <label class="col-sm-2 col-form-label">票券统计</label>
+            <div class="col-sm-10">
+              <div class="alert alert-info">
+                <strong>总计：</strong>{{ duobao.ticket_stats.total }} 张 | 
+                <strong class="text-success">真人购买：</strong>{{ duobao.ticket_stats.real }} 张 | 
+                <strong class="text-warning">机器人购买：</strong>{{ duobao.ticket_stats.robot }} 张
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3 required">
+            <label for="input-winner-ticket" class="col-sm-2 col-form-label">{{ entry_winner_ticket }}</label>
+            <div class="col-sm-10">
+              <div class="input-group">
+                <input type="text" name="winner_ticket" value="{{ duobao.winner_ticket }}" placeholder="{{ entry_winner_ticket }}" id="input-winner-ticket" class="form-control"/>
+                {% if duobao.auto_draw_type %}
+                <button type="button" id="btn-auto-select" class="btn btn-success" data-issue-id="{{ duobao.issue_id }}" data-auto-draw-type="{{ duobao.auto_draw_type }}">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 自动选择
+                </button>
+                {% endif %}
+              </div>
+              <small class="form-text text-muted">
+                {% if duobao.auto_draw_type == 'real' %}
+                  <i class="fa-solid fa-info-circle"></i> 已配置为优先派给真人
+                {% elseif duobao.auto_draw_type == 'robot' %}
+                  <i class="fa-solid fa-info-circle"></i> 已配置为优先派给机器人
+                {% elseif duobao.auto_draw_type == 'random' %}
+                  <i class="fa-solid fa-info-circle"></i> 已配置为随机派奖
+                {% else %}
+                  手动输入中奖票券号码
+                {% endif %}
+              </small>
+              <div id="error-winner_ticket" class="invalid-feedback"></div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <label for="input-notes" class="col-sm-2 col-form-label">{{ entry_notes }}</label>
+            <div class="col-sm-10">
+              <textarea name="notes" rows="4" placeholder="{{ entry_notes }}" id="input-notes" class="form-control">{{ duobao.notes }}</textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript"><!--
+// 自动选择中奖号码
+$('#btn-auto-select').on('click', function() {
+    var $btn = $(this);
+    var issue_id = $btn.data('issue-id');
+    var auto_draw_type = $btn.data('auto-draw-type');
+    
+    $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 处理中...');
+    
+    $.ajax({
+        url: 'index.php?route=catalog/duobao.autoSelectWinner&user_token={{ user_token }}',
+        type: 'post',
+        data: {
+            issue_id: issue_id,
+            auto_draw_type: auto_draw_type
+        },
+        dataType: 'json',
+        success: function(json) {
+            if (json.success) {
+                $('#input-winner-ticket').val(json.winner_ticket);
+                $('#input-winner-customer').val(json.winner_customer_id);
+                
+                alert(json.message);
+            } else if (json.error) {
+                alert('错误: ' + json.error);
+            }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+            alert('请求失败: ' + thrownError);
+        },
+        complete: function() {
+            $btn.prop('disabled', false).html('<i class="fa-solid fa-wand-magic-sparkles"></i> 自动选择');
+        }
+    });
+});
+//--></script>
+{{ footer }}

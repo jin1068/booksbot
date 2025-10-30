@@ -1,0 +1,130 @@
+{% if languages|length > 1 %}
+  <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-language">
+    <div id="jd-language" class="dropdown">
+      <button type="button" class="btn btn-link dropdown-toggle top-bar__language-toggle" data-bs-toggle="dropdown" aria-expanded="false" data-action="language" aria-label="{{ name }}">
+        <i class="fa-solid fa-globe jd-language__icon"></i>
+        <span class="jd-language__label">{{ name }}</span>
+        <i class="fa-solid fa-angle-down ms-1"></i>
+      </button>
+      <ul class="dropdown-menu">
+        {% for language in languages %}
+        <li>
+          <a class="dropdown-item"
+             href="{{ language.redirect }}"
+             data-language-option="{{ language.code }}"
+             data-language-redirect="{{ language.redirect }}">
+            {% if language.image %}<img src="{{ language.image }}" alt="{{ language.name }}" class="me-2"/>{% endif %}
+            {{ language.name }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <input type="hidden" name="code" value=""/>
+    <input type="hidden" name="redirect" value="{{ redirect }}"/>
+  </form>
+{% endif %}
+
+{% if languages|length > 1 %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('form-language');
+  if (!form) {
+    return;
+  }
+
+  const codeInput = form.querySelector('input[name="code"]');
+  const redirectInput = form.querySelector('input[name="redirect"]');
+  const actionUrl = form.getAttribute('action');
+
+  // 辅助函数：移除URL中的hash部分
+  function removeHashFromUrl(url) {
+    if (!url) return url;
+    return url.split('#')[0];
+  }
+
+  form.querySelectorAll('[data-language-option]').forEach(function(item) {
+    item.addEventListener('click', function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      const code = item.getAttribute('data-language-option');
+      const fallbackRedirect = removeHashFromUrl(item.getAttribute('href') || item.getAttribute('data-language-redirect'));
+
+      if (!code) {
+        if (fallbackRedirect) {
+          // 保存当前滚动位置
+          sessionStorage.setItem('scrollPosition', window.pageYOffset || document.documentElement.scrollTop);
+          window.location.replace(fallbackRedirect);
+        }
+        return;
+      }
+
+      if (codeInput) {
+        codeInput.value = code;
+      }
+
+      if (redirectInput) {
+        // 移除hash部分，避免跳转到锚点
+        const currentUrl = window.location.href.split('#')[0].split('?')[0];
+        redirectInput.value = currentUrl;
+      }
+
+      // 保存当前滚动位置和标记语言切换
+      sessionStorage.setItem('scrollPosition', window.pageYOffset || document.documentElement.scrollTop);
+      sessionStorage.setItem('preventScroll', 'true');
+      window.languageSwitching = true;
+
+      const formData = new FormData(form);
+
+      fetch(actionUrl, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('Language request failed');
+          }
+          return response.json();
+        })
+        .then(function(json) {
+          if (json && json.redirect) {
+            // 移除返回的redirect中的hash，使用replace避免历史记录
+            const cleanRedirect = removeHashFromUrl(json.redirect);
+            window.location.replace(cleanRedirect);
+          } else if (fallbackRedirect) {
+            window.location.replace(fallbackRedirect);
+          }
+        })
+        .catch(function(err) {
+          console.error('Language switch error:', err);
+          if (fallbackRedirect) {
+            window.location.replace(fallbackRedirect);
+          }
+        });
+    });
+  });
+
+  // 页面加载后恢复滚动位置
+  const savedPosition = sessionStorage.getItem('scrollPosition');
+  if (savedPosition) {
+    setTimeout(function() {
+      window.scrollTo(0, parseInt(savedPosition));
+      sessionStorage.removeItem('scrollPosition');
+    }, 100);
+  }
+
+  // 防止页面加载时自动滚动到hash位置
+  if (window.location.hash) {
+    setTimeout(function() {
+      window.scrollTo(0, 0);
+    }, 1);
+  }
+});
+</script>
+{% endif %}
